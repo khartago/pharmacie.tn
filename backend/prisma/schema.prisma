@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id    Int      @id @default(autoincrement())
+  name  RoleType @unique
+  users User[]
+
+  @@map("roles")
+}
+
+model City {
+  id     Int    @id @default(autoincrement())
+  name   String
+  region Region
+  users  User[]
+
+  @@unique([name, region])
+  @@map("cities")
+}
+
+model User {
+  id                      String            @id @default(uuid())
+  name                    String
+  email                   String            @unique
+  passwordHash            String
+  phone                   String?
+  address                 String?
+  cityId                  Int?
+  roleId                  Int
+  isActive                Boolean           @default(true)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  resetToken              String?           @unique
+  resetTokenExpiry        DateTime?
+  announcementsAsPharmacy Announcement[]    @relation("PharmacyAnnouncements")
+  announcementsAsSupplier Announcement[]    @relation("SupplierAnnouncements")
+  auditLogs               AuditLog[]
+  interests               Interest[]
+  notifications           Notification[]
+  requestResponses        RequestResponse[]
+  requests                Request[]
+  subscriptions           Subscription[]
+  supportTickets          SupportTicket[]
+  city                    City?             @relation(fields: [cityId], references: [id])
+  role                    Role              @relation(fields: [roleId], references: [id])
+
+  @@map("users")
+}
+
+model Subscription {
+  id        Int                @id @default(autoincrement())
+  userId    String
+  startDate DateTime
+  endDate   DateTime
+  status    SubscriptionStatus @default(TRIAL)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model Medicine {
+  id            Int            @id @default(autoincrement())
+  dci           String
+  brandName     String
+  dosage        String
+  form          String
+  laboratoire   String
+  atcCode       String?
+  announcements Announcement[]
+  requests      Request[]
+
+  @@unique([dci, brandName, dosage, form, laboratoire])
+  @@map("medicines")
+}
+
+model MedicineImportLog {
+  id            Int      @id @default(autoincrement())
+  filename      String
+  importedCount Int
+  importedBy    String
+  importedAt    DateTime @default(now())
+
+  @@map("medicine_import_log")
+}
+
+model Announcement {
+  id                Int                @id @default(autoincrement())
+  pharmacyUserId    String
+  supplierUserId    String?
+  manualSupplierName String?
+  medicineId        Int
+  quantity          Int
+  expiryDate        DateTime
+  visibleToSupplier Boolean            @default(true)
+  status            AnnouncementStatus @default(AVAILABLE)
+  supplierStatus    SupplierStatus     @default(NONE)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  medicine          Medicine           @relation(fields: [medicineId], references: [id])
+  pharmacyUser      User               @relation("PharmacyAnnouncements", fields: [pharmacyUserId], references: [id])
+  supplierUser      User?              @relation("SupplierAnnouncements", fields: [supplierUserId], references: [id])
+  interests         Interest[]
+
+  @@map("announcements")
+}
+
+model Interest {
+  id             Int            @id @default(autoincrement())
+  announcementId Int
+  pharmacyUserId String
+  status         InterestStatus @default(PENDING)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  announcement   Announcement   @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  pharmacyUser   User           @relation(fields: [pharmacyUserId], references: [id])
+
+  @@unique([announcementId, pharmacyUserId])
+  @@map("interests")
+}
+
+model Request {
+  id         Int               @id @default(autoincrement())
+  userId     String
+  medicineId Int
+  quantity   Int
+  status     RequestStatus     @default(OPEN)
+  region     Region?           // Keep for migration compatibility
+  scope      RequestScope?     @default(REGION)
+  cities     Json?             // Array of city IDs for CITY scope
+  regions    Json?             // Array of region names for REGION scope
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  responses  RequestResponse[]
+  medicine   Medicine          @relation(fields: [medicineId], references: [id])
+  user       User              @relation(fields: [userId], references: [id])
+
+  @@map("requests")
+}
+
+model RequestResponse {
+  id             Int                   @id @default(autoincrement())
+  requestId      Int
+  pharmacyUserId String
+  status         RequestResponseStatus @default(PENDING)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  pharmacyUser   User                  @relation(fields: [pharmacyUserId], references: [id])
+  request        Request               @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, pharmacyUserId])
+  @@map("request_responses")
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  userId      String
+  title       String
+  message     String
+  type        NotificationType
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  isImportant Boolean          @default(false)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SupportTicket {
+  id        Int                 @id @default(autoincrement())
+  userId    String
+  subject   String
+  message   String
+  status    SupportTicketStatus @default(OPEN)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("support_tickets")
+}
+
+model AnnouncementArchive {
+  id                Int                @id @default(autoincrement())
+  originalId        Int
+  medicineId        Int
+  quantity          Int
+  expiryDate        DateTime
+  pharmacyUserId    String
+  supplierUserId    String
+  visibleToSupplier Boolean
+  status            AnnouncementStatus
+  createdAt         DateTime
+  updatedAt         DateTime
+  archivedAt        DateTime           @default(now())
+
+  @@map("announcements_archive")
+}
+
+model RequestArchive {
+  id         Int           @id @default(autoincrement())
+  originalId Int
+  userId     String
+  medicineId Int
+  quantity   Int
+  region     Region?       // Keep for migration compatibility
+  scope      RequestScope?
+  cities     Json?
+  regions    Json?
+  status     RequestStatus
+  createdAt  DateTime
+  updatedAt  DateTime
+  archivedAt DateTime      @default(now())
+
+  @@map("requests_archive")
+}
+
+enum RoleType {
+  ADMIN
+  PHARMACY
+  SUPPLIER
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+}
+
+enum AnnouncementStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  EXPIRED
+}
+
+enum SupplierStatus {
+  NONE
+  PENDING
+  DONE
+  REFUSED
+}
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  REFUSED
+}
+
+enum RequestStatus {
+  OPEN
+  ACCEPTED
+  CLOSED
+  EXPIRED
+}
+
+enum RequestScope {
+  CITY
+  REGION
+  ALL_TUNISIA
+}
+
+enum RequestResponseStatus {
+  PENDING
+  ACCEPTED
+  REFUSED
+}
+
+enum NotificationType {
+  INTEREST
+  REQUEST
+  SUBSCRIPTION
+  SYSTEM
+  RETOUR
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Region {
+  TUNIS
+  ARIANA
+  BEN_AROUS
+  MANOUBA
+  NABEUL
+  ZAGHOUAN
+  BIZERTE
+  BEJA
+  JENDOUBA
+  KEF
+  SILIANA
+  SOUSSE
+  MONASTIR
+  MAHDIA
+  SFAX
+  KAIROUAN
+  KASSERINE
+  SIDI_BOUZID
+  GABES
+  MEDENINE
+  TATAOUINE
+  GAFSA
+  TOZEUR
+  KEBILI
+}
