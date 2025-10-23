@@ -105,7 +105,8 @@ export default function AdminAuditLogsPage() {
       });
       if (response.success && response.data) {
         console.log('Audit logs response:', response.data);
-        setLogs(response.data || []);
+        const logsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setLogs(logsData);
       }
     } catch (error) {
       console.error('Failed to fetch logs:', error);

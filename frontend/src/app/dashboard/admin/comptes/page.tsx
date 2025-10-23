@@ -130,7 +130,8 @@ export default function AdminComptesPage() {
     try {
       const response = await CitiesAPI.getAll({ limit: 1000 });
       if (response.success && response.data) {
-        setCities(response.data || []);
+        const citiesData = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setCities(citiesData);
       }
     } catch (error) {
       console.error('Failed to fetch cities:', error);
@@ -289,7 +290,6 @@ export default function AdminComptesPage() {
           email: selectedCompte.email,
           phone: selectedCompte.phone,
           address: selectedCompte.address,
-          cityId: selectedCompte.cityId,
           isActive: selectedCompte.isActive
         });
         if (response.success) {
