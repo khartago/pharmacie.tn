@@ -171,23 +171,23 @@ export default function PharmacieDemandesPage() {
           setResponses(responsesData);
           setTotal(response.data.pagination?.total || responsesData.length);
         } else {
-          const requestsData = Array.isArray(response.data) 
-            ? response.data 
-            : Array.isArray(response.data.requests) 
-              ? response.data.requests 
-              : Array.isArray(response.data.data) 
-                ? response.data.data 
-                : [];
-          
-          setRequests(requestsData);
-          setTotal(response.data.pagination?.total || requestsData.length);
+        const requestsData = Array.isArray(response.data) 
+          ? response.data 
+          : Array.isArray(response.data.requests) 
+            ? response.data.requests 
+            : Array.isArray(response.data.data) 
+              ? response.data.data 
+              : [];
+        
+        setRequests(requestsData);
+        setTotal(response.data.pagination?.total || requestsData.length);
         }
       } else {
         console.log('API Response failed or no data:', response);
         if (activeTab === 'jai-accepte') {
           setResponses([]);
         } else {
-          setRequests([]);
+        setRequests([]);
         }
         setTotal(0);
       }
@@ -197,7 +197,7 @@ export default function PharmacieDemandesPage() {
       if (activeTab === 'jai-accepte') {
         setResponses([]);
       } else {
-        setRequests([]);
+      setRequests([]);
       }
       setTotal(0);
     } finally {
@@ -416,8 +416,8 @@ export default function PharmacieDemandesPage() {
               'bg-green-100 text-green-800 border border-green-200'
             }`}>
               {isExpiredRequest ? 'EXPIRÉE' : 'OUVERTE'}
-            </div>
-          </div>
+        </div>
+        </div>
 
           {/* Medicine Header */}
           <div className="p-6 pb-4 flex-1 flex flex-col">
@@ -425,14 +425,14 @@ export default function PharmacieDemandesPage() {
               <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{item.medicine?.brandName || 'Nom non disponible'}</h3>
               <div className="text-sm text-gray-600 mb-1">{item.medicine?.dci || 'DCI non disponible'}</div>
               <div className="text-xs text-gray-500">{item.medicine?.laboratoire || 'Laboratoire non disponible'}</div>
-            </div>
+        </div>
 
             {/* Key Metrics */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 flex flex-col items-center justify-center">
                 <div className="text-2xl font-bold text-blue-700">{item.quantity || 0}</div>
                 <div className="text-xs text-blue-600 font-medium">Quantité demandée</div>
-              </div>
+          </div>
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center">
                 <div className="text-lg font-bold text-gray-700">{formatDate(item.createdAt)}</div>
                 <div className="text-xs text-gray-600 font-medium">Date de création</div>
@@ -443,15 +443,15 @@ export default function PharmacieDemandesPage() {
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
               <div className="text-sm font-semibold text-gray-800 mb-2">Détails de la demande</div>
               <div className="flex items-center space-x-4 text-xs text-gray-500">
-                <div>
+          <div>
                   <span className="font-medium">Portée:</span> {
                     item.scope === 'CITY' ? 'Ville' :
                     item.scope === 'REGION' ? 'Région' : 'Toute la Tunisie'
                   }
-                </div>
-                <div>
+          </div>
+          <div>
                   <span className="font-medium">Pharmacie:</span> {item.user?.name || 'Non spécifiée'}
-                </div>
+          </div>
               </div>
             </div>
 
@@ -471,7 +471,7 @@ export default function PharmacieDemandesPage() {
             )}
 
             {/* Action Button */}
-            <button
+                <button
               onClick={() => handleRespond(item)}
               disabled={isExpiredRequest}
               className={`w-full font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] ${
@@ -484,7 +484,7 @@ export default function PharmacieDemandesPage() {
                 <MessageSquare className="w-5 h-5" />
                 <span>J'AI CE MÉDICAMENT</span>
               </div>
-            </button>
+                </button>
           </div>
 
           {/* Footer */}
@@ -493,8 +493,8 @@ export default function PharmacieDemandesPage() {
               Créée le {formatDate(item.createdAt)}
             </div>
           </div>
-        </div>
-      );
+              </div>
+            );
     }
 
     if (activeTab === 'mes-demandes') {
@@ -502,42 +502,42 @@ export default function PharmacieDemandesPage() {
       const pendingCount = item.responses?.filter((r: any) => r.status === 'PENDING')?.length || 0;
       const isExpiredRequest = isExpired(item.createdAt, item.scope);
 
-      return (
+    return (
         <div className="group relative overflow-hidden h-full flex flex-col">
-          {/* Status Badge */}
-          <div className="absolute top-4 right-4 z-10">
-            <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-              item.status === 'OPEN' ? 'bg-green-100 text-green-800 border border-green-200' :
-              item.status === 'CLOSED' ? 'bg-gray-100 text-gray-800 border border-gray-200' :
-              item.status === 'EXPIRED' ? 'bg-red-100 text-red-800 border border-red-200' :
-              'bg-blue-100 text-blue-800 border border-blue-200'
-            }`}>
-              {item.status === 'OPEN' ? 'OUVERTE' :
-               item.status === 'CLOSED' ? 'FERMÉE' :
-               item.status === 'EXPIRED' ? 'EXPIRÉE' :
-               item.status}
-            </div>
+        {/* Status Badge */}
+        <div className="absolute top-4 right-4 z-10">
+          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+            item.status === 'OPEN' ? 'bg-green-100 text-green-800 border border-green-200' :
+            item.status === 'CLOSED' ? 'bg-gray-100 text-gray-800 border border-gray-200' :
+            item.status === 'EXPIRED' ? 'bg-red-100 text-red-800 border border-red-200' :
+            'bg-blue-100 text-blue-800 border border-blue-200'
+          }`}>
+            {item.status === 'OPEN' ? 'OUVERTE' :
+             item.status === 'CLOSED' ? 'FERMÉE' :
+             item.status === 'EXPIRED' ? 'EXPIRÉE' :
+             item.status}
+          </div>
+        </div>
+
+        {/* Medicine Header */}
+          <div className="p-6 pb-4 flex-1 flex flex-col">
+          <div className="mb-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{item.medicine?.brandName || 'Nom non disponible'}</h3>
+            <div className="text-sm text-gray-600 mb-1">{item.medicine?.dci || 'DCI non disponible'}</div>
+            <div className="text-xs text-gray-500">{item.medicine?.laboratoire || 'Laboratoire non disponible'}</div>
           </div>
 
-          {/* Medicine Header */}
-          <div className="p-6 pb-4 flex-1 flex flex-col">
-            <div className="mb-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{item.medicine?.brandName || 'Nom non disponible'}</h3>
-              <div className="text-sm text-gray-600 mb-1">{item.medicine?.dci || 'DCI non disponible'}</div>
-              <div className="text-xs text-gray-500">{item.medicine?.laboratoire || 'Laboratoire non disponible'}</div>
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 flex flex-col items-center justify-center">
+              <div className="text-2xl font-bold text-blue-700">{item.quantity || 0}</div>
+              <div className="text-xs text-blue-600 font-medium">Quantité demandée</div>
             </div>
-
-            {/* Key Metrics */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 flex flex-col items-center justify-center">
-                <div className="text-2xl font-bold text-blue-700">{item.quantity || 0}</div>
-                <div className="text-xs text-blue-600 font-medium">Quantité demandée</div>
-              </div>
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center">
                 <div className="text-lg font-bold text-gray-700">{formatDate(item.createdAt)}</div>
                 <div className="text-xs text-gray-600 font-medium">Date de création</div>
-              </div>
             </div>
+          </div>
 
             {/* Acceptants List */}
             {responseCount > 0 && (
@@ -545,52 +545,52 @@ export default function PharmacieDemandesPage() {
                 <div className="text-center mb-3">
                   <div className="text-2xl font-bold text-green-600 mb-1">{responseCount}</div>
                   <div className="text-base font-semibold text-gray-800">Pharmacies ayant accepté</div>
-                </div>
+              </div>
                 <div className="space-y-2">
                   {item.responses?.slice(0, 3).map((response: any, index: number) => (
                     <div key={index} className="bg-white p-3 rounded-lg border border-green-200">
                       <div className="text-sm font-semibold text-gray-800">{response.pharmacyUser?.name}</div>
                       <div className="text-xs text-gray-600">{response.pharmacyUser?.city?.name}</div>
                       <div className="text-xs text-green-600 font-medium">Contact disponible</div>
-                    </div>
+              </div>
                   ))}
                   {responseCount > 3 && (
                     <div className="text-xs text-gray-500 text-center">
                       +{responseCount - 3} autres pharmacies
-                    </div>
+            </div>
                   )}
-                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Action Buttons */}
+          {/* Action Buttons */}
             <div className="space-y-3">
               {item.status === 'OPEN' && (
-                <button
+            <button
                   onClick={() => handleMarkAsCompleted(item.id)}
                   className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <Check className="w-5 h-5" />
                     <span>MARQUER COMME TERMINÉ</span>
-                  </div>
-                </button>
+              </div>
+            </button>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleEdit(item)}
+            <button
+              onClick={() => handleEdit(item)}
                   disabled={isExpiredRequest}
                   className={`font-bold py-3 px-4 rounded-xl text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] ${
                     isExpiredRequest 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
                   }`}
-                >
-                  <div className="flex items-center justify-center space-x-1">
-                    <Edit className="w-4 h-4" />
-                    <span>Modifier</span>
-                  </div>
-                </button>
+            >
+              <div className="flex items-center justify-center space-x-1">
+                <Edit className="w-4 h-4" />
+                <span>Modifier</span>
+              </div>
+            </button>
                 <button
                   onClick={() => handleDelete(item.id)}
                   className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
@@ -601,17 +601,17 @@ export default function PharmacieDemandesPage() {
                   </div>
                 </button>
               </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-            <div className="text-xs text-gray-500">
-              Créée le {formatDate(item.createdAt)}
-            </div>
           </div>
         </div>
-      );
+
+        {/* Footer */}
+        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+          <div className="text-xs text-gray-500">
+            Créée le {formatDate(item.createdAt)}
+          </div>
+        </div>
+      </div>
+    );
     }
 
     if (activeTab === 'jai-accepte') {
