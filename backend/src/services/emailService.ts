@@ -32,7 +32,7 @@ export class EmailService {
         return;
       }
 
-      // Create transporter
+      // Create transporter with optimized settings for Render
       this.transporter = nodemailer.createTransport({
         host: process.env['EMAIL_HOST'] || 'smtp.gmail.com',
         port: parseInt(process.env['EMAIL_PORT'] || '587'),
@@ -41,6 +41,13 @@ export class EmailService {
           user: process.env['EMAIL_USER'],
           pass: process.env['EMAIL_PASS'],
         },
+        // Configuration optimisée pour Render
+        connectionTimeout: 60000, // 60 secondes
+        greetingTimeout: 30000,     // 30 secondes
+        socketTimeout: 60000,      // 60 secondes
+        tls: {
+          rejectUnauthorized: false
+        }
       });
 
       // Verify connection
@@ -49,10 +56,17 @@ export class EmailService {
     } catch (error) {
       console.error('❌ Échec de l\'initialisation du service email:', error);
       
-      // Check for specific Gmail authentication errors
-      if (error && typeof error === 'object' && 'code' in error && 'responseCode' in error) {
-        const emailError = error as { code: string; responseCode: number };
-        if (emailError.code === 'EAUTH' && emailError.responseCode === 535) {
+      // Check for specific error types
+      if (error && typeof error === 'object' && 'code' in error) {
+        const emailError = error as { code: string; responseCode?: number };
+        
+        if (emailError.code === 'ETIMEDOUT') {
+          console.log('⏱️ Timeout de connexion SMTP détecté');
+          console.log('💡 Solutions pour Render :');
+          console.log('   1. Vérifiez les variables d\'environnement SMTP sur Render');
+          console.log('   2. Utilisez un service SMTP plus fiable (SendGrid, Mailgun)');
+          console.log('   3. Vérifiez les restrictions réseau de Render');
+        } else if (emailError.code === 'EAUTH' && emailError.responseCode === 535) {
           console.log('🔐 Erreur d\'authentification Gmail détectée');
           console.log('💡 Solutions possibles :');
           console.log('   1. Vérifiez que vous utilisez un "Mot de passe d\'application" Gmail');
@@ -61,6 +75,9 @@ export class EmailService {
           console.log('      - Sélectionnez "Mail" et votre appareil');
           console.log('      - Copiez le mot de passe généré dans EMAIL_PASS');
           console.log('   3. Assurez-vous que l\'authentification à 2 facteurs est activée');
+        } else if (emailError.code === 'ECONNREFUSED') {
+          console.log('🚫 Connexion refusée par le serveur SMTP');
+          console.log('💡 Vérifiez la configuration SMTP_HOST et SMTP_PORT');
         }
       }
       

@@ -85,7 +85,7 @@ export default function AdminMedicamentsPage() {
         // Close modal and reset file
         setIsImportModalOpen(false);
         setImportFile(null);
-        alert(`Import réussi ! ${response.data.total} médicaments importés.`);
+        alert(`Import réussi ! ${response.data?.total || 0} médicaments importés.`);
       }
     } catch (error) {
       console.error('Import failed:', error);
@@ -120,10 +120,10 @@ export default function AdminMedicamentsPage() {
 
   const handleExport = async () => {
     try {
-      const response = await ExportAPI.exportMedicaments();
+      const response = await ExportAPI.exportMedicines();
       if (response.success) {
         // Handle download
-        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const blob = new Blob([response.data as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

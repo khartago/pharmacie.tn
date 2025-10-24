@@ -51,7 +51,7 @@ export default function AdminPharmaciesPage() {
     { key: 'city', header: 'Ville', sortable: true, render: (value: any) => value?.name || 'N/A' },
     { key: 'isActive', header: 'Statut', sortable: true, 
       render: (value: boolean) => (
-        <Badge variant={value ? 'success' : 'default'}>
+        <Badge variant={value ? 'default' : 'secondary'}>
           {value ? 'Actif' : 'Inactif'}
         </Badge>
       )
@@ -74,7 +74,7 @@ export default function AdminPharmaciesPage() {
         return (
           <div className="flex items-center space-x-2">
             <div>
-              <Badge variant={sub.status === 'ACTIVE' ? 'success' : sub.status === 'TRIAL' ? 'warning' : 'destructive'}>
+              <Badge variant={sub.status === 'ACTIVE' ? 'default' : sub.status === 'TRIAL' ? 'secondary' : 'destructive'}>
                 {sub.status === 'ACTIVE' ? 'Actif' : sub.status === 'TRIAL' ? 'Essai' : 'Expiré'}
               </Badge>
               <div className="text-xs text-gray-500 mt-1">
@@ -150,7 +150,7 @@ export default function AdminPharmaciesPage() {
       ]);
       
       if (pharmaciesResponse.success && pharmaciesResponse.data) {
-        setPharmacies(pharmaciesResponse.data.pharmacies || []);
+        setPharmacies(pharmaciesResponse.data.data || []);
       }
       
       if (statsResponse.success && statsResponse.data) {
