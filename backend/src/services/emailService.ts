@@ -34,7 +34,7 @@ export class EmailService {
 
       // Try alternative Gmail configurations for Render
       const isGmail = process.env['EMAIL_HOST'] === 'smtp.gmail.com' || process.env['EMAIL_HOST']?.includes('gmail');
-      if (isGmail && process.env.NODE_ENV === 'production') {
+      if (isGmail && process.env['NODE_ENV'] === 'production') {
         console.log('🔧 Tentative de connexion Gmail avec configuration optimisée pour Render...');
       }
 

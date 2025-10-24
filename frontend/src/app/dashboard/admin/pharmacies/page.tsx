@@ -396,8 +396,8 @@ export default function AdminPharmaciesPage() {
           email: selectedPharmacy.email,
           phone: selectedPharmacy.phone,
           address: selectedPharmacy.address,
-          cityId: selectedPharmacy.cityId,
-          isActive: selectedPharmacy.isActive
+          region: selectedPharmacy.region,
+          status: selectedPharmacy.isActive ? 'ACTIVE' : 'INACTIVE'
         });
         if (response.success) {
           showSuccessToast('Pharmacie modifiée avec succès');
