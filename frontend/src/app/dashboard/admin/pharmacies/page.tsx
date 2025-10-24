@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { PharmaciesAPI, ExportAPI, CitiesAPI, AnalyticsAPI } from '@/lib/api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Textarea } from '@/components';
+import { UnifiedTable, Modal } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { TUNISIA_REGIONS } from '@/lib/constants';
 import { validateEmail, validatePhone, validateRequired } from '@/lib/validation';
@@ -11,6 +11,9 @@ import { filterCitiesByRegion } from '@/lib/utils/regionMapping';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
 import { 
   Building2, 
   Plus, 
@@ -19,11 +22,6 @@ import {
   Download, 
   Edit, 
   Trash2, 
-  Eye,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
   Users,
   Activity
 } from 'lucide-react';
@@ -412,8 +410,7 @@ export default function AdminPharmaciesPage() {
           email: selectedPharmacy.email,
           phone: selectedPharmacy.phone,
           address: selectedPharmacy.address,
-          cityId: selectedPharmacy.cityId,
-          isActive: selectedPharmacy.isActive
+          region: selectedPharmacy.region
         });
         
         if (response.success) {
@@ -662,9 +659,6 @@ export default function AdminPharmaciesPage() {
             columns={columns}
             data={filteredPharmacies}
             pageSize={10}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onToggleStatus={handleToggleStatus}
           />
         </CardContent>
       </Card>
@@ -851,7 +845,7 @@ export default function AdminPharmaciesPage() {
                   <div className="mt-2 space-y-1">
                     <div className="text-sm flex items-center">
                       <span className="font-medium">Statut:</span> 
-                      <Badge variant={selectedPharmacy.subscriptions[0].status === 'ACTIVE' ? 'success' : 'warning'} className="ml-2">
+                      <Badge variant={selectedPharmacy.subscriptions[0].status === 'ACTIVE' ? 'default' : 'secondary'} className="ml-2">
                         {selectedPharmacy.subscriptions[0].status}
                       </Badge>
                     </div>

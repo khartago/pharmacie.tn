@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FournisseursAPI, ExportAPI, CitiesAPI, AnalyticsAPI } from '@/lib/api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Textarea } from '@/components';
+import { UnifiedTable, Modal } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { TUNISIA_REGIONS } from '@/lib/constants';
 import { validateEmail, validatePhone, validateRequired } from '@/lib/validation';
@@ -11,6 +11,8 @@ import { filterCitiesByRegion } from '@/lib/utils/regionMapping';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Truck, 
   Plus, 
@@ -19,11 +21,6 @@ import {
   Download, 
   Edit, 
   Trash2, 
-  Eye,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
   Users,
   Activity,
   Package

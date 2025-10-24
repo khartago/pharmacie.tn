@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { AuditLogsAPI, ExportAPI } from '@/lib/api';
-import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Select, Textarea } from '@/components';
+import { UnifiedTable, StatusBadge, Modal } from '@/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Select as SelectComponent,
   SelectContent,
@@ -18,12 +17,10 @@ import {
   Search, 
   Filter, 
   Download, 
-  Eye,
   Calendar,
   Activity,
   AlertCircle,
   CheckCircle,
-  Clock,
   User,
   Shield,
   Database
@@ -88,10 +85,6 @@ export default function AdminAuditLogsPage() {
     { key: 'ipAddress', header: 'IP', sortable: false, render: (value: string, row: any) => row.details?.ip || '-' }
   ];
 
-  useEffect(() => {
-    fetchLogs();
-  }, [dateFilter]);
-
   const fetchLogs = async () => {
     try {
       const days = parseInt(dateFilter);
@@ -115,10 +108,9 @@ export default function AdminAuditLogsPage() {
     }
   };
 
-  const handleView = (log: any) => {
-    setSelectedLog(log);
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    fetchLogs();
+  }, [dateFilter, fetchLogs]);
 
   const handleExport = async () => {
     try {

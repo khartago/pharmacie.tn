@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthAPI } from '@/lib/api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,6 @@ import {
   User, 
   Mail, 
   Phone, 
-  MapPin, 
   Calendar, 
   Shield, 
   Save, 
@@ -21,16 +20,13 @@ import {
   Key,
   Bell,
   Globe,
-  Lock,
-  Eye,
-  EyeOff
+  Lock
 } from 'lucide-react';
 
 export default function AdminProfilPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -55,7 +51,7 @@ export default function AdminProfilPage() {
           email: response.data.email || '',
           phone: response.data.phone || '',
           address: response.data.address || '',
-          role: response.data.role || '',
+          role: response.data.role?.name || '',
           department: response.data.department || '',
           bio: response.data.bio || ''
         });

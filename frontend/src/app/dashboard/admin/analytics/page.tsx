@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnalyticsAPI, ExportAPI } from '@/lib/api';
-import { UnifiedTable, StatusBadge, ExportButton, Skeleton, EmptyState } from '@/components';
+import { Skeleton } from '@/components';
 import { 
   BarChart3, 
   Users, 
@@ -15,7 +15,7 @@ import {
   Building2,
   Truck
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,11 +24,6 @@ export default function AdminAnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30'); // days
-  const [activeTab, setActiveTab] = useState('overview');
-
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, [period]);
 
   const fetchAnalyticsData = async () => {
     try {
@@ -62,6 +57,10 @@ export default function AdminAnalyticsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [period]);
 
   const handleExport = async () => {
     try {

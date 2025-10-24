@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, MapPin, Building2, Users, TrendingUp, Calendar, Edit, Trash2 } from 'lucide-react';
+import { Plus, MapPin, Building2, TrendingUp, Calendar, Edit, Trash2 } from 'lucide-react';
 import { UnifiedTable, Modal, Input } from '@/components';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { TUNISIA_REGIONS } from '@/lib/constants';
@@ -68,11 +67,11 @@ const AdminCitiesPage = () => {
   useEffect(() => {
     fetchCities();
     fetchStats();
-  }, []);
+  }, [fetchCities, fetchStats]);
 
   useEffect(() => {
     fetchCities();
-  }, [searchTerm, regionFilter]);
+  }, [searchTerm, regionFilter, fetchCities]);
 
   const fetchCities = async () => {
     try {

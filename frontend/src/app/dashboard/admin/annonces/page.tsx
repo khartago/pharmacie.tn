@@ -2,35 +2,27 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnnouncementsAPI as AnnoncesAPI, ExportAPI, AnalyticsAPI } from '@/lib/api';
-import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Textarea, EmptyInterests } from '@/components';
+import { UnifiedTable, StatusBadge, Input } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Megaphone, 
-  Plus, 
   Search, 
-  Filter, 
   Download, 
-  Edit, 
   Trash2, 
-  Eye,
   Calendar,
   Activity,
   AlertCircle,
   CheckCircle,
-  Clock,
-  User
+  Clock
 } from 'lucide-react';
 
 export default function AdminAnnoncesPage() {
   const [annonces, setAnnonces] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedAnnonce, setSelectedAnnonce] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -205,11 +197,6 @@ export default function AdminAnnoncesPage() {
     }
   };
 
-  const handleEdit = (annonce: any) => {
-    setSelectedAnnonce(annonce);
-    setIsEditMode(true);
-    setIsModalOpen(true);
-  };
 
 
   const handleDelete = async (annonce: any) => {
@@ -370,7 +357,7 @@ export default function AdminAnnoncesPage() {
             <Input
               placeholder="Rechercher par médicament, pharmacie ou fournisseur..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SupportAPI } from '@/lib/api';
-import { UnifiedTable, StatusBadge, Modal, Input, Textarea } from '@/components';
+import { UnifiedTable, StatusBadge, Modal } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import {
   Search, 
   Filter, 
   Edit, 
-  Eye,
   MessageSquare,
   Calendar,
   Activity,
@@ -32,7 +31,6 @@ export default function AdminSupportPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');

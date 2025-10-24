@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { RequestsAPI, ExportAPI, AnalyticsAPI } from '@/lib/api';
-import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Textarea } from '@/components';
+import { UnifiedTable, StatusBadge } from '@/components';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,21 +16,16 @@ import {
   Download, 
   Edit, 
   Trash2, 
-  Eye,
   Calendar,
   AlertCircle,
   CheckCircle,
-  Clock,
-  User
+  Clock
 } from 'lucide-react';
 
 export default function AdminDemandesPage() {
   const [demandes, setDemandes] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDemande, setSelectedDemande] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -121,11 +117,6 @@ export default function AdminDemandesPage() {
     }
   };
 
-  const handleEdit = (demande: any) => {
-    setSelectedDemande(demande);
-    setIsEditMode(true);
-    setIsModalOpen(true);
-  };
 
   const handleToggleStatus = async (demande: any) => {
     try {

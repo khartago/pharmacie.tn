@@ -32,6 +32,17 @@ export class EmailService {
         return;
       }
 
+      // Skip Gmail in production due to Render network restrictions
+      if (process.env['NODE_ENV'] === 'production' && 
+          (process.env['EMAIL_HOST'] === 'smtp.gmail.com' || process.env['EMAIL_HOST']?.includes('gmail'))) {
+        console.log('⚠️ Gmail désactivé en production sur Render');
+        console.log('💡 Solutions recommandées :');
+        console.log('   - SendGrid: smtp.sendgrid.net (plus fiable)');
+        console.log('   - Resend: smtp.resend.com (moderne)');
+        console.log('   - Mailgun: smtp.mailgun.org (alternatif)');
+        return;
+      }
+
       // Try alternative Gmail configurations for Render
       const isGmail = process.env['EMAIL_HOST'] === 'smtp.gmail.com' || process.env['EMAIL_HOST']?.includes('gmail');
       if (isGmail && process.env['NODE_ENV'] === 'production') {
