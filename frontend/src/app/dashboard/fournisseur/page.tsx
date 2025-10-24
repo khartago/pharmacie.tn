@@ -18,7 +18,8 @@ import {
   ActivityTimeline,
   EmptyRetours,
   EmptyRequests,
-  EmptyNotifications
+  EmptyNotifications,
+  EmptyInterests
 } from '@/components';
 import { Button } from '@/components/ui/button';
 import { 

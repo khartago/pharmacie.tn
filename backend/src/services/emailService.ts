@@ -142,8 +142,25 @@ export class EmailService {
    */
   private static loadBaseTemplate(): string {
     try {
-      const templatePath = path.join(__dirname, '../templates/base.html');
-      return fs.readFileSync(templatePath, 'utf8');
+      // Try multiple possible paths for the template
+      const possiblePaths = [
+        path.join(__dirname, '../templates/base.html'),
+        path.join(__dirname, '../../templates/base.html'),
+        path.join(process.cwd(), 'src/templates/base.html'),
+        path.join(process.cwd(), 'backend/src/templates/base.html')
+      ];
+      
+      for (const templatePath of possiblePaths) {
+        try {
+          if (fs.existsSync(templatePath)) {
+            return fs.readFileSync(templatePath, 'utf8');
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+      throw new Error('Template not found in any of the expected locations');
     } catch (error) {
       console.error('❌ Échec du chargement du template de base:', error);
       // Fallback template

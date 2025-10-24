@@ -48,7 +48,7 @@ export default function AdminMedicamentsPage() {
       // Fetch all medicines without pagination
       const response = await MedicinesAPI.getAll({ limit: 10000 });
       if (response.success && response.data) {
-        setMedicaments(response.data || []);
+        setMedicaments(response.data?.data || []);
       }
     } catch (error) {
       console.error('Failed to fetch medicaments:', error);

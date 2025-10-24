@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnnouncementsAPI as AnnoncesAPI, ExportAPI, AnalyticsAPI } from '@/lib/api';
-import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Textarea } from '@/components';
+import { UnifiedTable, StatusBadge, ExportButton, Modal, Input, Textarea, EmptyInterests } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

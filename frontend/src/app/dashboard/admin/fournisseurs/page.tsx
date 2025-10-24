@@ -50,7 +50,7 @@ export default function AdminFournisseursPage() {
     { key: 'city', header: 'Ville', sortable: true, render: (value: any) => value?.name || 'N/A' },
     { key: 'isActive', header: 'Statut', sortable: true, 
       render: (value: boolean) => (
-        <Badge variant={value ? 'success' : 'default'}>
+        <Badge variant={value ? 'default' : 'secondary'}>
           {value ? 'Actif' : 'Inactif'}
         </Badge>
       )
@@ -247,10 +247,10 @@ export default function AdminFournisseursPage() {
 
   const handleExport = async () => {
     try {
-      const response = await ExportAPI.exportFournisseurs();
+      const response = await ExportAPI.exportSuppliers();
       if (response.success) {
         // Handle download
-        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const blob = new Blob([response.data as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -326,8 +326,9 @@ export default function AdminFournisseursPage() {
           email: selectedFournisseur.email,
           phone: selectedFournisseur.phone,
           address: selectedFournisseur.address,
-          cityId: parseInt(selectedFournisseur.cityId),
-          isActive: selectedFournisseur.isActive
+          cityName: selectedFournisseur.cityName,
+          regionName: selectedFournisseur.regionName,
+          status: selectedFournisseur.isActive ? 'ACTIVE' : 'INACTIVE'
         });
         if (response.success) {
           showSuccessToast('Fournisseur modifié avec succès');
@@ -342,8 +343,9 @@ export default function AdminFournisseursPage() {
           email: selectedFournisseur.email,
           phone: selectedFournisseur.phone,
           address: selectedFournisseur.address,
-          cityId: parseInt(selectedFournisseur.cityId),
-          isActive: selectedFournisseur.isActive
+          cityName: selectedFournisseur.cityName,
+          regionName: selectedFournisseur.regionName,
+          role: 'SUPPLIER'
         });
         
         if (response.success) {
@@ -514,9 +516,6 @@ export default function AdminFournisseursPage() {
             columns={columns}
             data={filteredFournisseurs}
             pageSize={10}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onToggleStatus={handleToggleStatus}
           />
         </CardContent>
       </Card>

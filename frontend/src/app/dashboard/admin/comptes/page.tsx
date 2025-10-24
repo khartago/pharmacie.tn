@@ -290,7 +290,7 @@ export default function AdminComptesPage() {
           email: selectedCompte.email,
           phone: selectedCompte.phone,
           address: selectedCompte.address,
-          isActive: selectedCompte.isActive
+          status: selectedCompte.isActive ? 'ACTIVE' : 'INACTIVE'
         });
         if (response.success) {
           showSuccessToast('Compte modifié avec succès');
@@ -305,14 +305,14 @@ export default function AdminComptesPage() {
           email: selectedCompte.email,
           phone: selectedCompte.phone,
           address: selectedCompte.address,
-          cityId: selectedCompte.cityId,
-          role: selectedCompte.role,
-          isActive: selectedCompte.isActive
+          cityName: selectedCompte.cityName,
+          regionName: selectedCompte.regionName,
+          role: selectedCompte.role
         });
         
         if (response.success) {
           showSuccessToast('Compte créé avec succès');
-          setCreatedPassword(response.data?.password || '');
+          setCreatedPassword(''); // Password not returned in response
           fetchComptes();
           // Don't close modal immediately to show password
           setTimeout(() => {
@@ -540,9 +540,6 @@ export default function AdminComptesPage() {
             columns={columns}
             data={filteredComptes}
             pageSize={10}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onToggleStatus={handleToggleStatus}
           />
         </CardContent>
       </Card>
