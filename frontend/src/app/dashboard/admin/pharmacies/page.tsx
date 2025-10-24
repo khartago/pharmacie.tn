@@ -186,9 +186,8 @@ export default function AdminPharmaciesPage() {
     try {
       const response = await CitiesAPI.getByRegion(region);
       if (response.success && response.data) {
-        // CitiesAPI.getByRegion returns direct array or paginated response
-        const citiesData = response.data.data || response.data;
-        setCities(Array.isArray(citiesData) ? citiesData : []);
+        // CitiesAPI.getByRegion returns direct array
+        setCities(Array.isArray(response.data) ? response.data : []);
       } else {
         setCities([]);
       }
@@ -320,7 +319,7 @@ export default function AdminPharmaciesPage() {
       const response = await ExportAPI.exportPharmacies();
       if (response.success) {
         // Handle download
-        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const blob = new Blob([response.data as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

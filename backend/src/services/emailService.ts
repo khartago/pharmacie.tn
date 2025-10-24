@@ -32,8 +32,14 @@ export class EmailService {
         return;
       }
 
-      // Create transporter with optimized settings for Render
-      this.transporter = nodemailer.createTransport({
+      // Try alternative Gmail configurations for Render
+      const isGmail = process.env['EMAIL_HOST'] === 'smtp.gmail.com' || process.env['EMAIL_HOST']?.includes('gmail');
+      if (isGmail && process.env.NODE_ENV === 'production') {
+        console.log('🔧 Tentative de connexion Gmail avec configuration optimisée pour Render...');
+      }
+
+      // Create transporter with multiple Gmail configurations for Render
+      const transporterConfig: any = {
         host: process.env['EMAIL_HOST'] || 'smtp.gmail.com',
         port: parseInt(process.env['EMAIL_PORT'] || '587'),
         secure: process.env['EMAIL_SECURE'] === 'true', // true for 465, false for other ports
@@ -48,11 +54,44 @@ export class EmailService {
         tls: {
           rejectUnauthorized: false
         }
-      });
+      };
 
-      // Verify connection
-      await this.transporter.verify();
-      console.log('✅ Service email initialisé avec succès');
+      // Configuration spéciale pour Gmail sur Render
+      if (isGmail) {
+        transporterConfig.requireTLS = true;
+        transporterConfig.secureConnection = false;
+        transporterConfig.tls = {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false
+        };
+        // Essayer le port 465 en premier pour Gmail
+        if (process.env['EMAIL_PORT'] === '587') {
+          transporterConfig.port = 465;
+          transporterConfig.secure = true;
+        }
+      }
+
+      this.transporter = nodemailer.createTransport(transporterConfig);
+
+      // Verify connection with retry logic for Gmail on Render
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          await this.transporter.verify();
+          console.log('✅ Service email initialisé avec succès');
+          break;
+        } catch (verifyError) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log(`🔄 Tentative ${retryCount}/${maxRetries} - Retry dans 5 secondes...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          } else {
+            throw verifyError;
+          }
+        }
+      }
     } catch (error) {
       console.error('❌ Échec de l\'initialisation du service email:', error);
       
