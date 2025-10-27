@@ -19,7 +19,7 @@ export interface SelectProps {
 }
 
 const Select = React.forwardRef<HTMLDivElement, SelectProps>(
-  ({ placeholder, value, onChange, options = [], disabled = false, className, ...props }, ref) => {
+  ({ placeholder, value, onChange, options = [], disabled = false, className, ...props }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const selectRef = useRef<HTMLDivElement>(null);

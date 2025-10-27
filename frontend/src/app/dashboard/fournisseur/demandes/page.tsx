@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { RequestsAPI, ExportAPI } from '@/lib/api';
 import { UnifiedTable, StatusBadge, ExportButton, Modal, FormField, Skeleton, EmptyState, Input, Textarea, Select } from '@/components';
+import { Label } from '@/components/ui/label';
 import { usePagination } from '@/lib/hooks';
 import { 
   ClipboardDocumentListIcon, 
@@ -105,11 +106,7 @@ export default function FournisseurDemandesPage() {
     }
 
     try {
-      const response = await RequestsAPI.updateResponse(selectedRequest.id, {
-        message: responseData.message,
-        price: responseData.price,
-        availability: responseData.availability
-      });
+      const response = await RequestsAPI.updateResponseStatus(selectedRequest.id, responseData.responseId, responseData.status);
       if (response.success) {
         setIsEditModalOpen(false);
         setResponseData({});
@@ -125,18 +122,8 @@ export default function FournisseurDemandesPage() {
   };
 
   const handleDeleteResponse = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette réponse ?')) {
-      try {
-        const response = await RequestsAPI.deleteResponse(id);
-        if (response.success) {
-          fetchRequests();
-          alert('Réponse supprimée avec succès');
-        }
-      } catch (error) {
-        console.error('Failed to delete response:', error);
-        alert('Erreur lors de la suppression de la réponse');
-      }
-    }
+    // TODO: Implement delete response functionality when backend API is available
+    alert('Fonctionnalité de suppression de réponse non disponible');
   };
 
   const openResponseModal = (request: any) => {
@@ -295,7 +282,10 @@ export default function FournisseurDemandesPage() {
           {/* Action Button */}
           {activeTab === 'disponibles' && (
             <button
-              onClick={() => handleRespond(item)}
+              onClick={() => {
+                setSelectedRequest(item);
+                handleRespond();
+              }}
               className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <div className="flex items-center justify-center space-x-2">
@@ -458,35 +448,44 @@ export default function FournisseurDemandesPage() {
             </p>
           </div>
           
-          <Textarea
-            label="Message de réponse"
-            value={responseData.message || ''}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setResponseData({ ...responseData, message: e.target.value })}
-            error={errors.message}
-            required
-            rows={4}
-            placeholder="Détaillez votre réponse, conditions, prix..."
-          />
+          <div className="space-y-2">
+            <Label htmlFor="message">Message de réponse</Label>
+            <Textarea
+              id="message"
+              value={responseData.message || ''}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setResponseData({ ...responseData, message: e.target.value })}
+              rows={4}
+              placeholder="Détaillez votre réponse, conditions, prix..."
+            />
+            {errors.message && (
+              <p className="text-sm text-red-600">{errors.message}</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Prix proposé"
-              type="number"
-              value={responseData.price || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setResponseData({ ...responseData, price: e.target.value })}
-              placeholder="Prix en dinars"
-            />
-            <Select
-              label="Disponibilité"
-              value={responseData.availability || ''}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setResponseData({ ...responseData, availability: e.target.value })}
-              options={[
-                { value: 'IMMEDIATE', label: 'Immédiate' },
-                { value: 'WITHIN_WEEK', label: 'Dans la semaine' },
-                { value: 'WITHIN_MONTH', label: 'Dans le mois' },
-                { value: 'ON_ORDER', label: 'Sur commande' }
-              ]}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="price">Prix proposé</Label>
+              <Input
+                id="price"
+                type="number"
+                value={responseData.price || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setResponseData({ ...responseData, price: e.target.value })}
+                placeholder="Prix en dinars"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="availability">Disponibilité</Label>
+              <Select
+                value={responseData.availability || ''}
+                onChange={(value: string) => setResponseData({ ...responseData, availability: value })}
+                options={[
+                  { value: 'IMMEDIATE', label: 'Immédiate' },
+                  { value: 'WITHIN_WEEK', label: 'Dans la semaine' },
+                  { value: 'WITHIN_MONTH', label: 'Dans le mois' },
+                  { value: 'ON_ORDER', label: 'Sur commande' }
+                ]}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
@@ -520,35 +519,44 @@ export default function FournisseurDemandesPage() {
             </p>
           </div>
           
-          <Textarea
-            label="Message de réponse"
-            value={responseData.message || ''}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setResponseData({ ...responseData, message: e.target.value })}
-            error={errors.message}
-            required
-            rows={4}
-            placeholder="Détaillez votre réponse, conditions, prix..."
-          />
+          <div className="space-y-2">
+            <Label htmlFor="message">Message de réponse</Label>
+            <Textarea
+              id="message"
+              value={responseData.message || ''}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setResponseData({ ...responseData, message: e.target.value })}
+              rows={4}
+              placeholder="Détaillez votre réponse, conditions, prix..."
+            />
+            {errors.message && (
+              <p className="text-sm text-red-600">{errors.message}</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Prix proposé"
-              type="number"
-              value={responseData.price || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setResponseData({ ...responseData, price: e.target.value })}
-              placeholder="Prix en dinars"
-            />
-            <Select
-              label="Disponibilité"
-              value={responseData.availability || ''}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setResponseData({ ...responseData, availability: e.target.value })}
-              options={[
-                { value: 'IMMEDIATE', label: 'Immédiate' },
-                { value: 'WITHIN_WEEK', label: 'Dans la semaine' },
-                { value: 'WITHIN_MONTH', label: 'Dans le mois' },
-                { value: 'ON_ORDER', label: 'Sur commande' }
-              ]}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="price">Prix proposé</Label>
+              <Input
+                id="price"
+                type="number"
+                value={responseData.price || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setResponseData({ ...responseData, price: e.target.value })}
+                placeholder="Prix en dinars"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="availability">Disponibilité</Label>
+              <Select
+                value={responseData.availability || ''}
+                onChange={(value: string) => setResponseData({ ...responseData, availability: value })}
+                options={[
+                  { value: 'IMMEDIATE', label: 'Immédiate' },
+                  { value: 'WITHIN_WEEK', label: 'Dans la semaine' },
+                  { value: 'WITHIN_MONTH', label: 'Dans le mois' },
+                  { value: 'ON_ORDER', label: 'Sur commande' }
+                ]}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

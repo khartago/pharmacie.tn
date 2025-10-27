@@ -52,9 +52,9 @@ export default function FournisseurProfilPage() {
   });
 
   // Hooks
-  const { execute: getProfile, loading: profileLoading } = useApi(AuthAPI.getProfile);
-  const { execute: updateProfile, loading: updating } = useApi(AuthAPI.updateProfile);
-  const { execute: changePassword, loading: changingPassword } = useApi(AuthAPI.changePassword);
+  const { execute: getProfile, loading: profileLoading } = useApi(AuthAPI.getProfile);                                               
+  const { execute: updateProfile, loading: updating } = useApi(AuthAPI.updateProfile);                                               
+  // TODO: Implement changePassword functionality when backend API is available
   const { execute: getCities } = useApi(CitiesAPI.getAll);
   const { success, error } = useToast();
 
@@ -71,21 +71,18 @@ export default function FournisseurProfilPage() {
         getCities()
       ]);
 
-      if (profileResponse.success && profileResponse.data) {
+      if (profileResponse?.success && profileResponse.data) {
         setProfile(profileResponse.data);
         setFormData({
           name: profileResponse.data.name,
           email: profileResponse.data.email,
           phone: profileResponse.data.phone,
           address: profileResponse.data.address,
-          cityId: profileResponse.data.cityId,
-          companyName: profileResponse.data.companyName,
-          specialty: profileResponse.data.specialty,
-          description: profileResponse.data.description
+          cityId: profileResponse.data.city?.id || null
         });
       }
 
-      if (citiesResponse.success && citiesResponse.data) {
+      if (citiesResponse?.success && citiesResponse.data) {
         setCities(citiesResponse.data.data || []);
       }
     } catch (err) {
@@ -114,7 +111,6 @@ export default function FournisseurProfilPage() {
     if (formData.phone && !/^(\+216|00216|216)?[2-9][0-9]{7}$/.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Format de téléphone invalide';
     }
-    if (!formData.companyName?.trim()) newErrors.companyName = 'Nom de l\'entreprise requis';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -123,12 +119,12 @@ export default function FournisseurProfilPage() {
 
     try {
       const response = await updateProfile(formData);
-      if (response.success) {
+      if (response?.success) {
         success('Profil mis à jour avec succès');
         setIsEditModalOpen(false);
         loadData();
       } else {
-        error(response.error || 'Erreur lors de la mise à jour');
+        error(response?.error || 'Erreur lors de la mise à jour');
       }
     } catch (err) {
       error('Erreur lors de la mise à jour');
@@ -165,24 +161,15 @@ export default function FournisseurProfilPage() {
     }
 
     try {
-      const response = await changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-        confirmPassword: passwordData.confirmPassword
-      });
-      
-      if (response.success) {
-        success('Mot de passe modifié avec succès');
-        setIsPasswordModalOpen(false);
-      } else {
-        error(response.error || 'Erreur lors du changement de mot de passe');
-      }
+      // TODO: Implement changePassword functionality when backend API is available
+      error('Fonctionnalité de changement de mot de passe non disponible');
+      setIsPasswordModalOpen(false);
     } catch (err) {
       error('Erreur lors du changement de mot de passe');
     }
   };
 
-  const togglePasswordVisibility = (field: string) => {
+  const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
     setShowPasswords(prev => ({
       ...prev,
       [field]: !prev[field]
@@ -293,22 +280,6 @@ export default function FournisseurProfilPage() {
             <span>Informations de l'entreprise</span>
           </h3>
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Nom de l'entreprise</label>
-              <p className="text-sm text-gray-900">{profile.companyName || 'Non renseigné'}</p>
-            </div>
-            {profile.specialty && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Spécialité</label>
-                <p className="text-sm text-gray-900">{profile.specialty}</p>
-              </div>
-            )}
-            {profile.description && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Description</label>
-                <p className="text-sm text-gray-900">{profile.description}</p>
-              </div>
-            )}
             {profile.city && (
               <div>
                 <label className="text-sm font-medium text-gray-500">Ville</label>
@@ -396,41 +367,6 @@ export default function FournisseurProfilPage() {
               placeholder="Votre adresse complète"
               value={formData.address || ''}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              rows={3}
-            />
-          </FormField>
-
-          <FormField
-            label="Nom de l'entreprise"
-            required
-            error={errors.companyName}
-          >
-            <Input
-              placeholder="Nom de votre entreprise"
-              value={formData.companyName || ''}
-              onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            />
-          </FormField>
-
-          <FormField
-            label="Spécialité"
-            error={errors.specialty}
-          >
-            <Input
-              placeholder="Spécialité de votre entreprise"
-              value={formData.specialty || ''}
-              onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-            />
-          </FormField>
-
-          <FormField
-            label="Description"
-            error={errors.description}
-          >
-            <Textarea
-              placeholder="Description de votre entreprise"
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
             />
           </FormField>
@@ -554,7 +490,7 @@ export default function FournisseurProfilPage() {
           <ModalActionButton
             onClick={handleSubmitPassword}
             variant="default"
-            loading={changingPassword}
+            loading={false}
           >
             <Lock className="h-4 w-4 mr-2" />
             Changer

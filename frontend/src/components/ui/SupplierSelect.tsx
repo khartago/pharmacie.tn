@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, X, Check, Loader2 } from 'lucide-react';
-import { FournisseursAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 interface Supplier {
@@ -20,7 +19,6 @@ interface SupplierSelectProps {
   error?: string;
   disabled?: boolean;
   className?: string;
-  required?: boolean;
 }
 
 export default function SupplierSelect({
@@ -30,7 +28,6 @@ export default function SupplierSelect({
   error,
   disabled = false,
   className,
-  required = false
 }: SupplierSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value);
@@ -38,7 +35,6 @@ export default function SupplierSelect({
   const [loading, setLoading] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [isManualInput, setIsManualInput] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -119,12 +115,10 @@ export default function SupplierSelect({
     setSearchTerm(newValue);
     setIsOpen(true);
     setHighlightedIndex(-1);
-    setIsManualInput(true);
     
     // If user clears the input, clear selection
     if (!newValue) {
       setSelectedSupplier(null);
-      setIsManualInput(false);
       onChange('', null);
     } else {
       // Check if the input matches a supplier name
@@ -135,7 +129,6 @@ export default function SupplierSelect({
       
       if (matchingSupplier) {
         setSelectedSupplier(matchingSupplier);
-        setIsManualInput(false);
         onChange(newValue, matchingSupplier);
       } else {
         setSelectedSupplier(null);
@@ -150,7 +143,6 @@ export default function SupplierSelect({
     setSelectedSupplier(supplier);
     setIsOpen(false);
     setHighlightedIndex(-1);
-    setIsManualInput(false);
     onChange(supplier.name, supplier);
   };
 

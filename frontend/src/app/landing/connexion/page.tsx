@@ -59,7 +59,7 @@ export default function LoginPage() {
       } else {
         setError(response.error || 'Email ou mot de passe incorrect');
       }
-    } catch (err) {
+    } catch {
       setError('Erreur de connexion');
     } finally {
       setIsSubmitting(false);

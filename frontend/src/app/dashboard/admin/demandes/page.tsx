@@ -7,17 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Activity, 
-  Plus, 
   Search, 
-  Filter, 
   Download, 
-  Edit, 
-  Trash2, 
-  Calendar,
-  AlertCircle,
+  Trash2,
   CheckCircle,
   Clock
 } from 'lucide-react';
@@ -330,7 +324,6 @@ export default function AdminDemandesPage() {
           <UnifiedTable
             data={filteredDemandes}
             columns={columns}
-            onToggleStatus={handleToggleStatus}
             loading={loading}
             searchable={false}
             filterable={false}

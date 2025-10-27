@@ -6,23 +6,17 @@ import { UnifiedTable, StatusBadge, Modal } from '@/components';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/enhanced-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   LifeBuoy, 
   Plus, 
   Search, 
   Filter, 
-  Edit, 
   MessageSquare,
-  Calendar,
   Activity,
   AlertCircle,
   CheckCircle,
   Clock,
   User,
-  Mail,
-  Phone,
-  FileText,
   Send
 } from 'lucide-react';
 
@@ -31,6 +25,7 @@ export default function AdminSupportPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -52,9 +47,9 @@ export default function AdminSupportPage() {
 
   const fetchTickets = async () => {
     try {
-      const response = await SupportAPI.getAllTickets();
+      const response = await SupportAPI.getAll();
       if (response.success && response.data) {
-        setTickets(response.data || []);
+        setTickets(response.data.data || []);
       }
     } catch (error) {
       console.error('Failed to fetch tickets:', error);
@@ -77,7 +72,9 @@ export default function AdminSupportPage() {
 
   const handleUpdateStatus = async (ticketId: string, newStatus: string) => {
     try {
-      const response = await SupportAPI.updateTicketStatus(ticketId, newStatus);
+      const response = await SupportAPI.update(ticketId, { 
+        status: newStatus as 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' 
+      });
       if (response.success) {
         fetchTickets();
       }
@@ -90,7 +87,7 @@ export default function AdminSupportPage() {
     if (!newMessage.trim() || !selectedTicket) return;
     
     try {
-      const response = await SupportAPI.addMessage(selectedTicket.id, newMessage);
+      const response = await SupportAPI.reply(selectedTicket.id, { replyMessage: newMessage });
       if (response.success) {
         setNewMessage('');
         fetchTickets();
@@ -334,8 +331,7 @@ export default function AdminSupportPage() {
             columns={columns}
             data={filteredTickets}
             pageSize={10}
-            onEdit={handleEdit}
-            onView={handleView}
+            onRowClick={handleView}
           />
         </CardContent>
       </Card>

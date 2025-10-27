@@ -12,9 +12,11 @@ export interface User {
   updatedAt: string;
   lastLoginAt?: string;
   role: {
+    id: number;
     name: 'ADMIN' | 'PHARMACY' | 'SUPPLIER';
   };
   city?: {
+    id: number;
     name: string;
     region: Region;
   };
@@ -979,7 +981,7 @@ export const HealthAPI = {
         success: response.ok && data.status === 'OK',
         data: data
       };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Failed to fetch API status' };
     }
   },
@@ -992,7 +994,7 @@ export const HealthAPI = {
         success: response.ok && data.status === 'OK',
         data: data
       };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Failed to fetch database status' };
     }
   },
@@ -1005,7 +1007,7 @@ export const HealthAPI = {
         success: response.ok && data.status === 'OK',
         data: data
       };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Failed to fetch app status' };
     }
   },
@@ -1018,7 +1020,7 @@ export const HealthAPI = {
         success: response.ok && data.status === 'OK',
         data: data
       };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Failed to fetch email status' };
     }
   },
@@ -1031,7 +1033,7 @@ export const HealthAPI = {
         success: response.ok && data.status === 'OK',
         data: data
       };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Failed to fetch queue status' };
     }
   },
@@ -1068,7 +1070,7 @@ export const HealthAPI = {
           timestamp: new Date().toISOString()
         }
       };
-    } catch (error) {
+    } catch {
       return { 
         success: false, 
         error: 'Failed to fetch system health',

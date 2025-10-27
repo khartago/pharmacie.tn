@@ -64,15 +64,6 @@ const AdminCitiesPage = () => {
     }
   ];
 
-  useEffect(() => {
-    fetchCities();
-    fetchStats();
-  }, [fetchCities, fetchStats]);
-
-  useEffect(() => {
-    fetchCities();
-  }, [searchTerm, regionFilter, fetchCities]);
-
   const fetchCities = async () => {
     try {
       setLoading(true);
@@ -91,9 +82,9 @@ const AdminCitiesPage = () => {
         params.search = searchTerm;
       }
       
-      const response = await AdminCitiesAPI.getAll(params);
+      const response = await AdminCitiesAPI.getAll(params);    
       if (response.success && response.data) {
-        setCities(response.data || []);
+        setCities(response.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching cities:', error);
@@ -112,6 +103,15 @@ const AdminCitiesPage = () => {
       console.error('Error fetching stats:', error);
     }
   };
+
+  useEffect(() => {
+    fetchCities();
+    fetchStats();
+  }, [fetchCities, fetchStats]);
+
+  useEffect(() => {
+    fetchCities();
+  }, [searchTerm, regionFilter, fetchCities]);
 
   const handleCreate = () => {
     setEditingCity(null);
@@ -171,8 +171,8 @@ const AdminCitiesPage = () => {
       if (editingCity) {
         const response = await AdminCitiesAPI.update(editingCity.id, formData);
         if (response.success && response.data) {
-          setCities(cities.map(c => 
-            c.id === editingCity.id ? response.data : c
+          setCities(cities.map(c =>
+            c.id === editingCity.id ? response.data! : c       
           ));
         } else {
           alert('Erreur lors de la modification');
@@ -315,16 +315,14 @@ const AdminCitiesPage = () => {
 
       {/* Table */}
       <Card className="card-modern-2025">
-        <UnifiedTable
-          columns={columns}
-          data={filteredCities}
-          loading={loading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          pageSize={50}
-          searchable={false}
-          filterable={false}
-        />
+          <UnifiedTable
+            columns={columns}
+            data={filteredCities}
+            loading={loading}
+            pageSize={50}
+            searchable={false}
+            filterable={false}
+          />
       </Card>
 
       {/* Modal */}

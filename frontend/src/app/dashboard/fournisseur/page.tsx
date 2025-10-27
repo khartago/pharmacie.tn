@@ -43,8 +43,8 @@ export default function FournisseurDashboardPage() {
     AnalyticsAPI.getMyStats()
   );
   
-  const { data: availableAnnouncements, loading: announcementsLoading, execute: executeAnnouncements } = useApi(() => 
-    AnnouncementsAPI.getAll({ forSupplier: true, limit: 5 })
+  const { data: availableAnnouncements, loading: announcementsLoading, execute: executeAnnouncements } = useApi(() =>                
+    AnnouncementsAPI.getAll({ visibleToSupplier: true, limit: 5 })   
   );
   
   const { data: myInterests, loading: interestsLoading, execute: executeInterests } = useApi(() => 
@@ -62,12 +62,12 @@ export default function FournisseurDashboardPage() {
 
   // Use real stats from API
   const stats = {
-    availableAnnouncements: myStats?.data?.availableAnnouncements || 0,
-    myInterests: myStats?.data?.myInterests || 0,
-    acceptedInterests: myStats?.data?.acceptedInterests || 0,
-    unreadNotifications: myStats?.data?.unreadNotifications || 0,
-    openDemandes: myStats?.data?.openDemandes || 0,
-    successRate: myStats?.data?.successRate || 0
+    availableAnnouncements: myStats?.data?.availableAnnouncements || 0,                                                              
+    myInterests: myStats?.data?.pendingInterests || 0,
+    acceptedInterests: myStats?.data?.acceptedInterests || 0,  
+    unreadNotifications: myStats?.data?.unreadNotifications || 0,                                                                    
+    openDemandes: myStats?.data?.openRequests || 0,
+    successRate: 0 // TODO: Calculate success rate from available data
   };
 
   const activityColumns = [
@@ -129,7 +129,7 @@ export default function FournisseurDashboardPage() {
           {
             title: "Retours disponibles",
             value: stats.availableAnnouncements,
-            change: { value: stats.announcementGrowth || 0, period: 'vs mois dernier' },
+            change: { value: 0, period: 'vs mois dernier' }, // TODO: Calculate growth from available data
             icon: FileText,
             gradient: 'green',
             onClick: () => window.location.href = '/dashboard/fournisseur/retours'
@@ -137,7 +137,7 @@ export default function FournisseurDashboardPage() {
           {
             title: "Mes intérêts",
             value: stats.myInterests,
-            change: { value: stats.interestGrowth || 0, period: 'vs mois dernier' },
+            change: { value: 0, period: 'vs mois dernier' }, // TODO: Calculate growth from available data
             icon: Heart,
             gradient: 'purple',
             onClick: () => window.location.href = '/dashboard/fournisseur/retours'
@@ -145,7 +145,7 @@ export default function FournisseurDashboardPage() {
           {
             title: "Intérêts acceptés",
             value: stats.acceptedInterests,
-            change: { value: stats.acceptedGrowth || 0, period: 'vs mois dernier' },
+            change: { value: 0, period: 'vs mois dernier' }, // TODO: Calculate growth from available data
             icon: CheckCircle,
             gradient: 'blue',
             onClick: () => window.location.href = '/dashboard/fournisseur/retours'
@@ -236,9 +236,9 @@ export default function FournisseurDashboardPage() {
             </div>
           </div>
           <div className="p-6">
-            {availableAnnouncements?.data?.announcements?.length > 0 ? (
+            {(availableAnnouncements?.data?.data?.length || 0) > 0 ? (
               <div className="space-y-3">
-                {availableAnnouncements.data.announcements.slice(0, 3).map((announcement: any) => (
+                {availableAnnouncements?.data?.data?.slice(0, 3).map((announcement: any) => (
                   <div key={announcement.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${
@@ -280,9 +280,9 @@ export default function FournisseurDashboardPage() {
             </div>
           </div>
           <div className="p-6">
-            {myInterests?.data?.interests?.length > 0 ? (
+            {(myInterests?.data?.data?.length || 0) > 0 ? (
               <div className="space-y-3">
-                {myInterests.data.interests.slice(0, 3).map((interest: any) => (
+                {myInterests?.data?.data?.slice(0, 3).map((interest: any) => (
                   <div key={interest.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${

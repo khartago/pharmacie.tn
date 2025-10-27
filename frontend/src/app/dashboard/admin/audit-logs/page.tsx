@@ -29,7 +29,7 @@ import {
 export default function AdminAuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [selectedLog] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');

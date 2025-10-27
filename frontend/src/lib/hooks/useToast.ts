@@ -40,7 +40,7 @@ export function useToast(): UseToastReturn {
         removeToast(id);
       }, newToast.duration);
     }
-  }, []);
+  }, [removeToast]);
 
   const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));

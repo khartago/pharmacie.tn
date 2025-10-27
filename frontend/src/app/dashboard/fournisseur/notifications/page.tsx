@@ -14,6 +14,7 @@ import {
   EmptyState,
   SkeletonTable
 } from '@/components';
+import { FilterOption } from '@/components/FilterPanel';
 import { Button } from '@/components/ui/button';
 import { 
   Bell, 
@@ -73,7 +74,7 @@ export default function FournisseurNotificationsPage() {
   const loadAllNotifications = async () => {
     try {
       const response = await getNotifications({ limit: 1000 }); // Get all notifications
-      if (response.success && response.data) {
+      if (response?.success && response.data) {
         setAllNotifications(response.data.data || []);
       }
     } catch (err) {
@@ -94,7 +95,7 @@ export default function FournisseurNotificationsPage() {
 
       const response = await getNotifications(params);
       
-      if (response.success && response.data) {
+      if (response?.success && response.data) {
         setNotifications(response.data.data || []);
         setTotal(response.data.pagination?.total || 0);
       }
@@ -108,7 +109,7 @@ export default function FournisseurNotificationsPage() {
   const handleMarkAsRead = async (notificationId: number) => {
     try {
       const response = await markAsRead(notificationId.toString());
-      if (response.success) {
+      if (response?.success) {
         success('Notification marquée comme lue');
         loadData();
         loadAllNotifications(); // Update tab counts
@@ -121,7 +122,7 @@ export default function FournisseurNotificationsPage() {
   const handleMarkAllAsRead = async () => {
     try {
       const response = await markAllAsRead();
-      if (response.success) {
+      if (response?.success) {
         success('Toutes les notifications marquées comme lues');
         loadData();
         loadAllNotifications(); // Update tab counts
@@ -139,7 +140,7 @@ export default function FournisseurNotificationsPage() {
       onConfirm: async () => {
         try {
           const response = await deleteNotification(notificationId.toString());
-          if (response.success) {
+          if (response?.success) {
             success('Notification supprimée');
             loadData();
             loadAllNotifications(); // Update tab counts
@@ -202,7 +203,7 @@ export default function FournisseurNotificationsPage() {
                 <Icon className="h-4 w-4" />
               </div>
               <span className="text-sm font-medium">
-                {NOTIFICATION_TYPES[value]?.label || value}
+                {(NOTIFICATION_TYPES as any)[value]?.label || value}
               </span>
             </div>
           );
@@ -231,9 +232,8 @@ export default function FournisseurNotificationsPage() {
         header: 'Statut', 
         sortable: true, 
         render: (value: boolean) => (
-          <StatusBadge 
-            status={value ? 'READ' : 'UNREAD'} 
-            variant={value ? 'secondary' : 'default'}
+          <StatusBadge
+            status={value ? 'READ' : 'UNREAD'}
           />
         )
       },
@@ -278,16 +278,16 @@ export default function FournisseurNotificationsPage() {
   };
 
   // Filter options
-  const filterOptions = [
-    { key: 'type', label: 'Type', type: 'select', options: [
+  const filterOptions: FilterOption[] = [
+    { key: 'type', label: 'Type', type: 'select' as const, options: [
       { value: 'INTEREST', label: 'Intérêt' },
       { value: 'REQUEST', label: 'Demande' },
       { value: 'RETOUR', label: 'Retour' },
       { value: 'SUBSCRIPTION', label: 'Abonnement' },
       { value: 'SYSTEM', label: 'Système' }
     ]},
-    { key: 'isRead', label: 'Non lues seulement', type: 'checkbox' },
-    { key: 'dateRange', label: 'Période', type: 'date' }
+    { key: 'isRead', label: 'Non lues seulement', type: 'checkbox' as const },
+    { key: 'dateRange', label: 'Période', type: 'date' as const }
   ];
 
   if (loading && notifications.length === 0) {

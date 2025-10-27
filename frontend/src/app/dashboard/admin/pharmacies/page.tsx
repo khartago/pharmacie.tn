@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
 import { 
   Building2, 
   Plus, 
@@ -23,7 +22,8 @@ import {
   Edit, 
   Trash2, 
   Users,
-  Activity
+  Activity,
+  Calendar
 } from 'lucide-react';
 
 export default function AdminPharmaciesPage() {

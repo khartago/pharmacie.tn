@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setIsSubmitted(true);
-    } catch (err) {
+    } catch {
       setError('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);

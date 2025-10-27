@@ -1,7 +1,7 @@
 import React from 'react';
 import PublicLayout from '@/components/PublicLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Globe, Shield, FileText, Phone, Mail, MapPin } from 'lucide-react';
+import { Building2, Shield, FileText, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function LegalMentionsPage() {
   const currentYear = new Date().getFullYear();

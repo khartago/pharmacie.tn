@@ -32,7 +32,6 @@ export default function MedicineAutocomplete({
   error,
   disabled = false,
   className,
-  required = false
 }: MedicineAutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value);

@@ -31,10 +31,7 @@ export default function AdminProfilPage() {
     name: '',
     email: '',
     phone: '',
-    address: '',
-    role: '',
-    department: '',
-    bio: ''
+    address: ''
   });
 
   useEffect(() => {
@@ -50,10 +47,7 @@ export default function AdminProfilPage() {
           name: response.data.name || '',
           email: response.data.email || '',
           phone: response.data.phone || '',
-          address: response.data.address || '',
-          role: response.data.role?.name || '',
-          department: response.data.department || '',
-          bio: response.data.bio || ''
+          address: response.data.address || ''
         });
       }
     } catch (error) {
@@ -65,7 +59,15 @@ export default function AdminProfilPage() {
 
   const handleSave = async () => {
     try {
-      const response = await AuthAPI.updateProfile(formData);
+      // Prepare the update data according to the User interface
+      const updateData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address
+      };
+      
+      const response = await AuthAPI.updateProfile(updateData);
       if (response.success) {
         setUser(response.data);
         setIsEditing(false);
@@ -84,10 +86,7 @@ export default function AdminProfilPage() {
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      address: user?.address || '',
-      role: user?.role || '',
-      department: user?.department || '',
-      bio: user?.bio || ''
+      address: user?.address || ''
     });
     setIsEditing(false);
   };
@@ -171,7 +170,7 @@ export default function AdminProfilPage() {
               <h3 className="text-xl font-semibold text-slate-900 mb-1">
                 {isEditing ? formData.name : user?.name}
               </h3>
-              <p className="text-slate-600 mb-4">{user?.role}</p>
+              <p className="text-slate-600 mb-4">{user?.role?.name}</p>
               <div className="space-y-2 text-sm text-slate-600">
                 <div className="flex items-center justify-center space-x-2">
                   <Mail className="w-4 h-4" />
@@ -183,10 +182,10 @@ export default function AdminProfilPage() {
                     <span>{user.phone}</span>
                   </div>
                 )}
-                {user?.department && (
+                {user?.city && (
                   <div className="flex items-center justify-center space-x-2">
                     <Shield className="w-4 h-4" />
-                    <span>{user.department}</span>
+                    <span>{user.city.name}</span>
                   </div>
                 )}
               </div>
@@ -239,16 +238,6 @@ export default function AdminProfilPage() {
                     className="mt-1"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="department">Département</Label>
-                  <Input
-                    id="department"
-                    value={isEditing ? formData.department : user?.department}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    disabled={!isEditing}
-                    className="mt-1"
-                  />
-                </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="address">Adresse</Label>
                   <Input
@@ -257,17 +246,6 @@ export default function AdminProfilPage() {
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
                     disabled={!isEditing}
                     className="mt-1"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="bio">Biographie</Label>
-                  <textarea
-                    id="bio"
-                    value={isEditing ? formData.bio : user?.bio}
-                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                    disabled={!isEditing}
-                    rows={3}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                   />
                 </div>
               </div>
@@ -293,7 +271,7 @@ export default function AdminProfilPage() {
                     </div>
                     <div>
                       <p className="font-medium text-slate-900">Rôle</p>
-                      <p className="text-sm text-slate-600">{user?.role}</p>
+                      <p className="text-sm text-slate-600">{user?.role?.name}</p>
                     </div>
                   </div>
                   <Badge className="bg-blue-100 text-blue-700">Administrateur</Badge>

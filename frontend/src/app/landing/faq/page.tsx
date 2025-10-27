@@ -138,7 +138,7 @@ export default function FAQPage() {
     );
   };
 
-  const toggleQuestion = (category: string, questionIndex: number) => {
+  const toggleQuestion = () => {
     // This would need to be implemented if you want individual question toggles
     // For now, we'll keep the category-based approach
   };

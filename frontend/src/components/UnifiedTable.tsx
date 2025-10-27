@@ -7,13 +7,11 @@ import {
   ChevronLeft, 
   ChevronRight,
   ChevronUp,
-  ChevronDown,
-  MoreHorizontal
+  ChevronDown
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -22,14 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -70,7 +60,6 @@ export interface UnifiedTableProps<T = any> {
   onSort?: (key: string, direction: 'asc' | 'desc') => void;
   onPageChange?: (page: number) => void;
   onRowClick?: (row: T) => void;
-  onToggleStatus?: (row: T) => void;
   emptyMessage?: string;
   className?: string;
 }
@@ -96,7 +85,6 @@ const UnifiedTable = <T extends Record<string, any>>({
   onSort,
   onPageChange,
   onRowClick,
-  onToggleStatus,
   emptyMessage = 'Aucune donnée disponible',
   className = '',
 }: UnifiedTableProps<T>) => {

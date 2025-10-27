@@ -10,12 +10,7 @@ import {
   Clock, 
   Users,
   ArrowRight,
-  Star,
-  Building2,
-  Heart,
-  Megaphone,
-  Activity,
-  TrendingUp
+  Megaphone
 } from 'lucide-react';
 
 export default function HomePage() {
