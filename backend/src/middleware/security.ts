@@ -51,7 +51,12 @@ export const securityHeaders = helmet({
 
 // CORS configuration for your frontend
 export const corsOptions = {
-  origin: process.env['FRONTEND_URL'] || 'http://localhost:3000',
+  origin: [
+    process.env['FRONTEND_URL'] || 'http://localhost:3000',
+    'https://pharmacie-tn.onrender.com', // Production frontend URL
+    'https://pharmacie-tn.netlify.app',  // Alternative deployment URL
+    'http://localhost:3000'              // Development URL
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
