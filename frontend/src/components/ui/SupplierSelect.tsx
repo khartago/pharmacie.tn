@@ -38,7 +38,7 @@ export default function SupplierSelect({
   
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load suppliers on mount
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function SupplierSelect({
     // If user clears the input, clear selection
     if (!newValue) {
       setSelectedSupplier(null);
-      onChange('', null);
+      onChange('', undefined);
     } else {
       // Check if the input matches a supplier name
       const matchingSupplier = suppliers.find(s => 
@@ -132,7 +132,7 @@ export default function SupplierSelect({
         onChange(newValue, matchingSupplier);
       } else {
         setSelectedSupplier(null);
-        onChange(newValue, null);
+        onChange(newValue, undefined);
       }
     }
   };
@@ -199,8 +199,7 @@ export default function SupplierSelect({
     setSearchTerm('');
     setSelectedSupplier(null);
     setIsOpen(false);
-    setIsManualInput(false);
-    onChange('', null);
+    onChange('', undefined);
     inputRef.current?.focus();
   };
 

@@ -473,16 +473,16 @@ export default function AdminDashboardLayout({ children, user }: AdminDashboardL
                     <ChevronDown className="h-4 w-4 text-slate-400" />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end">
                   <DropdownMenuLabel className="font-semibold">Mon Compte</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <Link href="/dashboard/admin/profil" className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
                       <span>Mon profil</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <Link href="/dashboard/admin/parametres" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Paramètres</span>

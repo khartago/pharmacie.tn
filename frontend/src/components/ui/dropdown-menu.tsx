@@ -51,13 +51,13 @@ const DropdownMenu = React.forwardRef<
       {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
           if (child.type === DropdownMenuTrigger) {
-            return React.cloneElement(child, { 
+            return React.cloneElement(child as any, {
               onClick: () => setIsOpen(!isOpen),
-              'aria-expanded': isOpen 
+              'aria-expanded': isOpen
             });
           }
           if (child.type === DropdownMenuContent) {
-            return isOpen ? React.cloneElement(child, { 
+            return isOpen ? React.cloneElement(child as any, { 
               style: { display: 'block' }
             }) : null;
           }

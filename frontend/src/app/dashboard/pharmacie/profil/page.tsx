@@ -50,9 +50,9 @@ export default function PharmacieProfilPage() {
   });
 
   // Hooks
-  const { execute: getProfile, loading: profileLoading } = useApi(AuthAPI.getProfile);
-  const { execute: updateProfile, loading: updating } = useApi(AuthAPI.updateProfile);
-  const { execute: changePassword, loading: changingPassword } = useApi(AuthAPI.changePassword);
+  const { execute: getProfile, loading: profileLoading } = useApi(AuthAPI.getProfile);                                               
+  const { execute: updateProfile, loading: updating } = useApi(AuthAPI.updateProfile);                                               
+  // TODO: Implement changePassword functionality when backend API is available
   const { execute: getCities } = useApi(CitiesAPI.getAll);
   const { success, error } = useToast();
 
@@ -69,18 +69,18 @@ export default function PharmacieProfilPage() {
         getCities()
       ]);
 
-      if (profileResponse.success && profileResponse.data) {
+      if (profileResponse?.success && profileResponse.data) {
         setProfile(profileResponse.data);
         setFormData({
           name: profileResponse.data.name,
           email: profileResponse.data.email,
           phone: profileResponse.data.phone,
           address: profileResponse.data.address,
-          cityId: profileResponse.data.cityId
+          cityId: profileResponse.data.city?.id || null
         });
       }
 
-      if (citiesResponse.success && citiesResponse.data) {
+      if (citiesResponse?.success && citiesResponse.data) {
         setCities(citiesResponse.data.data || []);
       }
     } catch (err) {
@@ -117,12 +117,12 @@ export default function PharmacieProfilPage() {
 
     try {
       const response = await updateProfile(formData);
-      if (response.success) {
+      if (response?.success) {
         success('Profil mis à jour avec succès');
         setIsEditModalOpen(false);
         loadData();
       } else {
-        error(response.error || 'Erreur lors de la mise à jour');
+        error(response?.error || 'Erreur lors de la mise à jour');
       }
     } catch (err) {
       error('Erreur lors de la mise à jour');
@@ -159,24 +159,15 @@ export default function PharmacieProfilPage() {
     }
 
     try {
-      const response = await changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-        confirmPassword: passwordData.confirmPassword
-      });
-      
-      if (response.success) {
-        success('Mot de passe modifié avec succès');
-        setIsPasswordModalOpen(false);
-      } else {
-        error(response.error || 'Erreur lors du changement de mot de passe');
-      }
+      // TODO: Implement changePassword functionality when backend API is available
+      error('Fonctionnalité de changement de mot de passe non disponible');
+      setIsPasswordModalOpen(false);
     } catch (err) {
       error('Erreur lors du changement de mot de passe');
     }
   };
 
-  const togglePasswordVisibility = (field: string) => {
+  const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
     setShowPasswords(prev => ({
       ...prev,
       [field]: !prev[field]
@@ -501,7 +492,7 @@ export default function PharmacieProfilPage() {
           <ModalActionButton
             onClick={handleSubmitPassword}
             variant="default"
-            loading={changingPassword}
+            loading={false}
           >
             <Lock className="h-4 w-4 mr-2" />
             Changer

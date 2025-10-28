@@ -23,7 +23,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const selectRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLButtonElement>(null);
 
     const filteredOptions = options.filter(option =>
       option.label.toLowerCase().includes(searchTerm.toLowerCase())

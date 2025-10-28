@@ -94,21 +94,21 @@ export function formatStatus(status: string): string {
     
     // Request statuses
     'OPEN': 'Ouvert',
-    'ACCEPTED': 'Accepté',
+    'REQUEST_ACCEPTED': 'Accepté',
     'CLOSED': 'Fermé',
     
     // Interest statuses
-    'PENDING': 'En attente',
-    'ACCEPTED': 'Accepté',
-    'REFUSED': 'Refusé',
+    'INTEREST_PENDING': 'En attente',
+    'INTEREST_ACCEPTED': 'Accepté',
+    'INTEREST_REFUSED': 'Refusé',
     
     // Request response statuses
-    'PENDING': 'En attente',
-    'ACCEPTED': 'Accepté',
-    'REFUSED': 'Refusé',
+    'RESPONSE_PENDING': 'En attente',
+    'RESPONSE_ACCEPTED': 'Accepté',
+    'RESPONSE_REFUSED': 'Refusé',
     
     // Support ticket statuses
-    'OPEN': 'Ouvert',
+    'TICKET_OPEN': 'Ouvert',
     'IN_PROGRESS': 'En cours',
     'RESOLVED': 'Résolu',
     

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { RequestsAPI, MedicinesAPI, CitiesAPI } from '@/lib/api';
 import MedicineAutocomplete from '@/components/ui/MedicineAutocomplete';
 import { 
@@ -24,6 +24,7 @@ import {
   SkeletonTable,
   CountdownTimer
 } from '@/components';
+import { FilterOption } from '@/components/FilterPanel';
 import { Button } from '@/components/ui/button';
 import { 
   ShoppingCart, 
@@ -50,6 +51,14 @@ import { REQUEST_SCOPE_OPTIONS, EXPIRY_TIMES } from '@/lib/utils/constants';
 import { TUNISIA_REGIONS } from '@/lib/constants';
 
 export default function PharmacieDemandesPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <PharmacieDemandesContent />
+    </Suspense>
+  );
+}
+
+function PharmacieDemandesContent() {
   const [activeTab, setActiveTab] = useState('disponibles');
   const [requests, setRequests] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
@@ -107,13 +116,15 @@ export default function PharmacieDemandesPage() {
   const loadCitiesAndRegions = async () => {
     try {
       const citiesResponse = await CitiesAPI.getAll();
-      const citiesData = citiesResponse.data.data || citiesResponse.data;
+      const citiesData = citiesResponse.data?.data || citiesResponse.data;
       setCities(Array.isArray(citiesData) ? citiesData : []);
       
       // Extract unique regions from cities
-      const uniqueRegions = [...new Set(citiesData.map((city: any) => city.region))]
-        .map(region => ({ value: region, label: region }));
-      setRegions(uniqueRegions);
+      if (citiesData && Array.isArray(citiesData)) {
+        const uniqueRegions = [...new Set(citiesData.map((city: any) => city.region))]
+          .map(region => ({ value: region, label: region }));
+        setRegions(uniqueRegions);
+      }
     } catch (error) {
       console.error('Error loading cities and regions:', error);
     }
@@ -162,22 +173,18 @@ export default function PharmacieDemandesPage() {
         if (activeTab === 'jai-accepte') {
           const responsesData = Array.isArray(response.data) 
             ? response.data 
-            : Array.isArray(response.data.responses) 
-              ? response.data.responses 
-              : Array.isArray(response.data.data) 
-                ? response.data.data 
-                : [];
+            : Array.isArray(response.data.data) 
+              ? response.data.data 
+              : [];
           
           setResponses(responsesData);
           setTotal(response.data.pagination?.total || responsesData.length);
         } else {
         const requestsData = Array.isArray(response.data) 
           ? response.data 
-          : Array.isArray(response.data.requests) 
-            ? response.data.requests 
-            : Array.isArray(response.data.data) 
-              ? response.data.data 
-              : [];
+          : Array.isArray(response.data.data) 
+            ? response.data.data 
+            : [];
         
         setRequests(requestsData);
         setTotal(response.data.pagination?.total || requestsData.length);
@@ -247,7 +254,7 @@ export default function PharmacieDemandesPage() {
       onConfirm: async () => {
         try {
           const response = await deleteRequest(id.toString());
-          if (response.success) {
+          if (response?.success) {
             success('Demande supprimée avec succès');
             loadData();
           }
@@ -287,12 +294,12 @@ export default function PharmacieDemandesPage() {
         response = await createRequest(formData);
       }
 
-      if (response.success) {
-        success(editingRequest ? 'Demande modifiée' : 'Demande créée');
+      if (response?.success) {
+        success(editingRequest ? 'Demande modifiée' : 'Demande créée');                                                             
         setIsModalOpen(false);
         loadData();
       } else {
-        error(response.error || 'Erreur lors de l\'opération');
+        error(response?.error || 'Erreur lors de l\'opération');
       }
     } catch (err) {
       error('Erreur lors de l\'opération');
@@ -316,7 +323,7 @@ export default function PharmacieDemandesPage() {
       success('Votre disponibilité a été confirmée ! Les coordonnées ont été partagées.');
       setConfirmDialog(null);
       loadData();
-    } catch (error) {
+    } catch (err) {
       error('Erreur lors de la confirmation');
     }
   };
@@ -337,7 +344,7 @@ export default function PharmacieDemandesPage() {
       success('Demande marquée comme terminée !');
       setConfirmDialog(null);
       loadData();
-    } catch (error) {
+    } catch (err) {
       error('Erreur lors de la finalisation');
     }
   };
@@ -353,7 +360,7 @@ export default function PharmacieDemandesPage() {
         message: responseData.message
       });
       
-      if (response.success) {
+      if (response?.success) {
         success('Réponse envoyée avec succès');
         setIsResponseModalOpen(false);
         loadData();
@@ -366,7 +373,7 @@ export default function PharmacieDemandesPage() {
   const handleAcceptResponse = async (responseId: number) => {
     try {
       const response = await acceptResponse(selectedRequest.id.toString(), responseId.toString(), 'ACCEPTED');
-      if (response.success) {
+      if (response?.success) {
         success('Réponse acceptée');
         setSelectedResponse(response.data);
         setShowContactModal(true);
@@ -385,7 +392,7 @@ export default function PharmacieDemandesPage() {
       onConfirm: async () => {
         try {
           const response = await refuseResponse(selectedRequest.id.toString(), responseId.toString(), 'REFUSED');
-          if (response.success) {
+          if (response?.success) {
             success('Réponse refusée');
             loadData();
           }
@@ -762,14 +769,14 @@ export default function PharmacieDemandesPage() {
   };
 
   // Filter options
-  const filterOptions = [
-    { key: 'status', label: 'Statut', type: 'select', options: [
+  const filterOptions: FilterOption[] = [
+    { key: 'status', label: 'Statut', type: 'select' as const, options: [
       { value: 'OPEN', label: 'Ouvert' },
       { value: 'ACCEPTED', label: 'Accepté' },
       { value: 'CLOSED', label: 'Fermé' },
       { value: 'EXPIRED', label: 'Expiré' }
     ]},
-    { key: 'region', label: 'Région', type: 'select', options: TUNISIA_REGIONS.map(region => ({ value: region, label: region })) }
+    { key: 'region', label: 'Région', type: 'select' as const, options: TUNISIA_REGIONS.map(region => ({ value: region, label: region })) }
   ];
 
   if (loading && (requests.length === 0 && responses.length === 0)) {
@@ -932,7 +939,7 @@ export default function PharmacieDemandesPage() {
               placeholder="Sélectionner la portée"
               value={formData.scope || ''}
               onChange={(value) => setFormData({ ...formData, scope: value, cities: [], regions: [] })}
-              options={REQUEST_SCOPE_OPTIONS}
+              options={REQUEST_SCOPE_OPTIONS as any}
             />
           </FormField>
 
@@ -947,7 +954,6 @@ export default function PharmacieDemandesPage() {
                 value={formData.cities || []}
                 onChange={(values) => setFormData({ ...formData, cities: values })}
                 options={cities.map(city => ({ value: city.id, label: `${city.name} (${city.region})` }))}
-                multiple
               />
             </FormField>
           )}
@@ -963,7 +969,6 @@ export default function PharmacieDemandesPage() {
                 value={formData.regions || []}
                 onChange={(values) => setFormData({ ...formData, regions: values })}
                 options={regions}
-                multiple
               />
             </FormField>
           )}

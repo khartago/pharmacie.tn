@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { SupportAPI } from '@/lib/api';
 import { 
   UnifiedTable, 
@@ -21,6 +21,7 @@ import {
   EmptyState,
   SkeletonTable
 } from '@/components';
+import { FilterOption } from '@/components/FilterPanel';
 import { Button } from '@/components/ui/button';
 import { 
   HelpCircle, 
@@ -39,6 +40,14 @@ import { formatDate, formatRelativeTime } from '@/lib/utils/formatters';
 import { SUPPORT_CATEGORIES, PRIORITIES } from '@/lib/utils/constants';
 
 export default function PharmacieSupportPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <PharmacieSupportContent />
+    </Suspense>
+  );
+}
+
+function PharmacieSupportContent() {
   const [activeTab, setActiveTab] = useState('ouverts');
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +101,7 @@ export default function PharmacieSupportPage() {
 
       const response = await getTickets(params);
       
-      if (response.success && response.data) {
+      if (response?.success && response.data) {
         setTickets(response.data.data || []);
         setTotal(response.data.pagination?.total || 0);
       }
@@ -131,7 +140,7 @@ export default function PharmacieSupportPage() {
       onConfirm: async () => {
         try {
           const response = await deleteTicket(ticketId.toString());
-          if (response.success) {
+          if (response?.success) {
             success('Ticket supprimé avec succès');
             loadData();
           }
@@ -164,12 +173,12 @@ export default function PharmacieSupportPage() {
         response = await createTicket(formData);
       }
 
-      if (response.success) {
-        success(editingTicket ? 'Ticket modifié' : 'Ticket créé');
+      if (response?.success) {
+        success(editingTicket ? 'Ticket modifié' : 'Ticket créé');                                                                  
         setIsModalOpen(false);
         loadData();
       } else {
-        error(response.error || 'Erreur lors de l\'opération');
+        error(response?.error || 'Erreur lors de l\'opération');
       }
     } catch (err) {
       error('Erreur lors de l\'opération');
@@ -194,7 +203,7 @@ export default function PharmacieSupportPage() {
         replyMessage: replyData.replyMessage
       });
       
-      if (response.success) {
+      if (response?.success) {
         success('Réponse envoyée avec succès');
         setIsReplyModalOpen(false);
         loadData();
@@ -207,7 +216,7 @@ export default function PharmacieSupportPage() {
   const handleArchive = async (ticketId: number) => {
     try {
       const response = await archiveTicket(ticketId.toString());
-      if (response.success) {
+      if (response?.success) {
         success('Ticket archivé');
         loadData();
       }
@@ -242,11 +251,10 @@ export default function PharmacieSupportPage() {
         header: 'Priorité', 
         sortable: true, 
         render: (value: string) => {
-          const priority = PRIORITIES[value?.toUpperCase()];
+          const priority = (PRIORITIES as any)[value?.toUpperCase()];
           return (
-            <StatusBadge 
-              status={value} 
-              variant={priority?.color === 'red' ? 'destructive' : priority?.color === 'yellow' ? 'warning' : 'default'}
+            <StatusBadge
+              status={value}
             />
           );
         }
@@ -257,7 +265,7 @@ export default function PharmacieSupportPage() {
         sortable: true, 
         render: (value: string) => (
           <span className="text-sm text-muted-foreground">
-            {SUPPORT_CATEGORIES[value?.toUpperCase()]?.label || value}
+            {(SUPPORT_CATEGORIES as any)[value?.toUpperCase()]?.label || value}
           </span>
         )
       },
@@ -310,7 +318,6 @@ export default function PharmacieSupportPage() {
             key: 'delete',
             label: 'Supprimer',
             icon: Trash2,
-            variant: 'destructive' as const,
             onClick: () => handleDelete(row.id)
           });
 
@@ -321,24 +328,24 @@ export default function PharmacieSupportPage() {
   };
 
   // Filter options
-  const filterOptions = [
-    { key: 'status', label: 'Statut', type: 'select', options: [
+  const filterOptions: FilterOption[] = [
+    { key: 'status', label: 'Statut', type: 'select' as const, options: [
       { value: 'OPEN', label: 'Ouvert' },
       { value: 'IN_PROGRESS', label: 'En cours' },
       { value: 'RESOLVED', label: 'Résolu' }
     ]},
-    { key: 'priority', label: 'Priorité', type: 'select', options: [
+    { key: 'priority', label: 'Priorité', type: 'select' as const, options: [
       { value: 'low', label: 'Faible' },
       { value: 'medium', label: 'Moyenne' },
       { value: 'high', label: 'Élevée' }
     ]},
-    { key: 'category', label: 'Catégorie', type: 'select', options: [
+    { key: 'category', label: 'Catégorie', type: 'select' as const, options: [
       { value: 'technical', label: 'Technique' },
       { value: 'account', label: 'Compte' },
       { value: 'billing', label: 'Facturation' },
       { value: 'other', label: 'Autre' }
     ]},
-    { key: 'isImportant', label: 'Important', type: 'checkbox' }
+    { key: 'isImportant', label: 'Important', type: 'checkbox' as const }
   ];
 
   if (loading && tickets.length === 0) {

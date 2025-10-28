@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+// Use system fonts for static export compatibility
+const fontClass = 'font-sans';
 
 export const metadata: Metadata = {
   title: 'Pharmacie.tn - Plateforme de Gestion Pharmaceutique',
@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className={inter.className}>
+      <body className={fontClass}>
         {children}
       </body>
     </html>

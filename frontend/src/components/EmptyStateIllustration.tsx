@@ -156,7 +156,7 @@ export default function EmptyStateIllustration({
           {action && (
             <Button
               onClick={action.onClick}
-              variant={action.variant || 'default'}
+              variant={action.variant === 'primary' ? 'default' : action.variant || 'default'}
               className={sizeStyles.button}
             >
               {action.label}

@@ -70,8 +70,8 @@ export default function PharmacieDashboardPage() {
     openRequests: myStats?.data?.openRequests || 0,
     pendingInterests: myStats?.data?.pendingInterests || 0,
     unreadNotifications: myStats?.data?.unreadNotifications || 0,
-    expiredItems: myStats?.data?.expiredItems || 0,
-    successRate: myStats?.data?.successRate || 0
+    expiredItems: 0, // TODO: Add expiredItems to backend stats API
+    successRate: 0 // TODO: Add successRate to backend stats API
   };
 
   const activityColumns = [
@@ -133,7 +133,7 @@ export default function PharmacieDashboardPage() {
           {
             title: "Annonces actives",
             value: stats.activeAnnouncements,
-            change: { value: stats.announcementGrowth || 0, period: 'vs mois dernier' },
+            change: { value: 0, period: 'vs mois dernier' }, // TODO: Add announcementGrowth to backend stats API
             icon: FileText,
             gradient: 'green',
             onClick: () => window.location.href = '/dashboard/pharmacie/annonces'
@@ -141,7 +141,7 @@ export default function PharmacieDashboardPage() {
           {
             title: "Demandes ouvertes",
             value: stats.openRequests,
-            change: { value: stats.requestGrowth || 0, period: 'vs mois dernier' },
+            change: { value: 0, period: 'vs mois dernier' }, // TODO: Add requestGrowth to backend stats API
             icon: ShoppingCart,
             gradient: 'blue',
             onClick: () => window.location.href = '/dashboard/pharmacie/demandes'
@@ -149,7 +149,7 @@ export default function PharmacieDashboardPage() {
           {
             title: "Intérêts en attente",
             value: stats.pendingInterests,
-            change: { value: stats.interestGrowth || 0, period: 'vs mois dernier' },
+            change: { value: 0, period: 'vs mois dernier' }, // TODO: Add interestGrowth to backend stats API
             icon: Heart,
             gradient: 'purple',
             onClick: () => window.location.href = '/dashboard/pharmacie/annonces'
@@ -240,9 +240,9 @@ export default function PharmacieDashboardPage() {
             </div>
           </div>
           <div className="p-6">
-            {myAnnouncements?.data?.announcements?.length > 0 ? (
+            {(myAnnouncements?.data?.data?.length || 0) > 0 ? (
               <div className="space-y-3">
-                {myAnnouncements.data.announcements.slice(0, 3).map((announcement: any) => (
+                {myAnnouncements?.data?.data?.slice(0, 3).map((announcement: any) => (
                   <div key={announcement.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${
@@ -263,7 +263,7 @@ export default function PharmacieDashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyAnnouncements />
+              <EmptyAnnouncements onCreate={() => window.location.href = '/dashboard/pharmacie/annonces'} />
             )}
           </div>
         </div>
@@ -284,9 +284,9 @@ export default function PharmacieDashboardPage() {
             </div>
           </div>
           <div className="p-6">
-            {myRequests?.data?.requests?.length > 0 ? (
+            {(myRequests?.data?.data?.length || 0) > 0 ? (
               <div className="space-y-3">
-                {myRequests.data.requests.slice(0, 3).map((request: any) => (
+                {myRequests?.data?.data?.slice(0, 3).map((request: any) => (
                   <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${
@@ -307,7 +307,7 @@ export default function PharmacieDashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyRequests />
+              <EmptyRequests onCreate={() => window.location.href = '/dashboard/pharmacie/demandes'} />
             )}
           </div>
         </div>

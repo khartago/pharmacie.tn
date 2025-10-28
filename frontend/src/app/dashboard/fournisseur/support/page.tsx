@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { SupportAPI } from '@/lib/api';
 import { 
   UnifiedTable, 
@@ -21,6 +21,7 @@ import {
   EmptyState,
   SkeletonTable
 } from '@/components';
+import { Button } from '@/components/ui/button';
 import { FilterOption } from '@/components/FilterPanel';
 import { 
   HelpCircle, 
@@ -39,6 +40,14 @@ import { formatDate, formatRelativeTime } from '@/lib/utils/formatters';
 import { SUPPORT_CATEGORIES, PRIORITIES } from '@/lib/utils/constants';
 
 export default function FournisseurSupportPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <FournisseurSupportContent />
+    </Suspense>
+  );
+}
+
+function FournisseurSupportContent() {
   const [activeTab, setActiveTab] = useState('ouverts');
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

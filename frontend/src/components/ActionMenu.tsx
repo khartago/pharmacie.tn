@@ -78,7 +78,7 @@ export default function ActionMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger>
         <Button
           variant="ghost"
           size="icon"

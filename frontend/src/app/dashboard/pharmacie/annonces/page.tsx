@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { AnnouncementsAPI, MedicinesAPI, FournisseursAPI } from '@/lib/api';
 import MedicineAutocomplete from '@/components/ui/MedicineAutocomplete';
 import SupplierSelect from '@/components/ui/SupplierSelect';
@@ -56,6 +56,14 @@ import { validationRules } from '@/lib/utils/validators';
 import { REGIONS } from '@/lib/utils/constants';
 
 export default function PharmacieAnnoncesPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <PharmacieAnnoncesContent />
+    </Suspense>
+  );
+}
+
+function PharmacieAnnoncesContent() {
   const [activeTab, setActiveTab] = useState('disponibles');
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [interests, setInterests] = useState<any[]>([]);

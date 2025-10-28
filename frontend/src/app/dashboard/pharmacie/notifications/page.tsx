@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { NotificationsAPI } from '@/lib/api';
 import { 
   UnifiedTable, 
@@ -14,6 +14,7 @@ import {
   EmptyState,
   SkeletonTable
 } from '@/components';
+import { FilterOption } from '@/components/FilterPanel';
 import { Button } from '@/components/ui/button';
 import { 
   Bell, 
@@ -35,6 +36,14 @@ import { formatDate, formatRelativeTime } from '@/lib/utils/formatters';
 import { NOTIFICATION_TYPES } from '@/lib/utils/constants';
 
 export default function PharmacieNotificationsPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <PharmacieNotificationsContent />
+    </Suspense>
+  );
+}
+
+function PharmacieNotificationsContent() {
   const [activeTab, setActiveTab] = useState('non-lues');
   const [notifications, setNotifications] = useState<any[]>([]);
   const [allNotifications, setAllNotifications] = useState<any[]>([]);
@@ -73,7 +82,7 @@ export default function PharmacieNotificationsPage() {
   const loadAllNotifications = async () => {
     try {
       const response = await getNotifications({ limit: 1000 }); // Get all notifications
-      if (response.success && response.data) {
+      if (response?.success && response.data) {
         setAllNotifications(response.data.data || []);
       }
     } catch (err) {
@@ -94,7 +103,7 @@ export default function PharmacieNotificationsPage() {
 
       const response = await getNotifications(params);
       
-      if (response.success && response.data) {
+      if (response?.success && response.data) {
         setNotifications(response.data.data || []);
         setTotal(response.data.pagination?.total || 0);
       }
@@ -108,7 +117,7 @@ export default function PharmacieNotificationsPage() {
   const handleMarkAsRead = async (notificationId: number) => {
     try {
       const response = await markAsRead(notificationId.toString());
-      if (response.success) {
+      if (response?.success) {
         success('Notification marquée comme lue');
         loadData();
         loadAllNotifications(); // Update tab counts
@@ -121,8 +130,8 @@ export default function PharmacieNotificationsPage() {
   const handleMarkAllAsRead = async () => {
     try {
       const response = await markAllAsRead();
-      if (response.success) {
-        success('Toutes les notifications marquées comme lues');
+      if (response?.success) {
+        success('Toutes les notifications marquées comme lues');                                                                    
         loadData();
         loadAllNotifications(); // Update tab counts
       }
@@ -139,7 +148,7 @@ export default function PharmacieNotificationsPage() {
       onConfirm: async () => {
         try {
           const response = await deleteNotification(notificationId.toString());
-          if (response.success) {
+          if (response?.success) {
             success('Notification supprimée');
             loadData();
             loadAllNotifications(); // Update tab counts
@@ -283,16 +292,16 @@ export default function PharmacieNotificationsPage() {
   };
 
   // Filter options
-  const filterOptions = [
-    { key: 'type', label: 'Type', type: 'select', options: [
+  const filterOptions: FilterOption[] = [
+    { key: 'type', label: 'Type', type: 'select' as const, options: [
       { value: 'INTEREST', label: 'Intérêt' },
       { value: 'REQUEST', label: 'Demande' },
       { value: 'RETOUR', label: 'Retour' },
       { value: 'SUBSCRIPTION', label: 'Abonnement' },
       { value: 'SYSTEM', label: 'Système' }
     ]},
-    { key: 'isRead', label: 'Non lues seulement', type: 'checkbox' },
-    { key: 'dateRange', label: 'Période', type: 'date' }
+    { key: 'isRead', label: 'Non lues seulement', type: 'checkbox' as const },
+    { key: 'dateRange', label: 'Période', type: 'date' as const }
   ];
 
   if (loading && notifications.length === 0) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { NotificationsAPI } from '@/lib/api';
 import { 
   UnifiedTable, 
@@ -36,6 +36,14 @@ import { formatDate, formatRelativeTime } from '@/lib/utils/formatters';
 import { NOTIFICATION_TYPES } from '@/lib/utils/constants';
 
 export default function FournisseurNotificationsPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <FournisseurNotificationsContent />
+    </Suspense>
+  );
+}
+
+function FournisseurNotificationsContent() {
   const [activeTab, setActiveTab] = useState('non-lues');
   const [notifications, setNotifications] = useState<any[]>([]);
   const [allNotifications, setAllNotifications] = useState<any[]>([]);

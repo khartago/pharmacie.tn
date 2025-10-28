@@ -42,7 +42,7 @@ export default function MedicineAutocomplete({
   
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Format medicine name for display
   const formatMedicineName = (medicine: Medicine): string => {
@@ -78,7 +78,7 @@ export default function MedicineAutocomplete({
     try {
       const response = await MedicinesAPI.search({ query });
       if (response.success && response.data) {
-        setMedicines(response.data.medicines || []);
+        setMedicines(response.data.data || []);
       }
     } catch (error) {
       console.error('Failed to search medicines:', error);
@@ -115,7 +115,7 @@ export default function MedicineAutocomplete({
     // If user clears the input, clear selection
     if (!newValue) {
       setSelectedMedicine(null);
-      onChange('', null);
+      onChange('', undefined);
     }
   };
 
@@ -182,7 +182,7 @@ export default function MedicineAutocomplete({
     setSearchTerm('');
     setSelectedMedicine(null);
     setIsOpen(false);
-    onChange('', null);
+    onChange('', undefined);
     inputRef.current?.focus();
   };
 

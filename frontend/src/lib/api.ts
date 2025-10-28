@@ -44,6 +44,7 @@ export type AnnouncementStatus = 'AVAILABLE' | 'RESERVED' | 'EXPIRED' | 'RETURN_
 export type RequestStatus = 'OPEN' | 'ACCEPTED' | 'CLOSED' | 'EXPIRED';
 export type InterestStatus = 'PENDING' | 'ACCEPTED' | 'REFUSED';
 export type SupportTicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+export type RequestResponseStatus = 'PENDING' | 'ACCEPTED' | 'REFUSED';
 export type NotificationType = 'INTEREST' | 'REQUEST' | 'SUBSCRIPTION' | 'SYSTEM' | 'RETOUR';
 
 // Request/Response interfaces
@@ -127,6 +128,17 @@ export interface Request {
     };
   };
   createdAt: string;
+}
+
+export interface RequestResponse {
+  id: number;
+  requestId: number;
+  pharmacyUserId: string;
+  status: RequestResponseStatus;
+  createdAt: string;
+  updatedAt: string;
+  pharmacyUser: User;
+  request: Request;
 }
 
 export interface CreateRequestData {
@@ -559,12 +571,6 @@ export const AnnouncementsAPI = {
       method: 'POST',
     }),
 
-  refuseRetour: (id: string, reason: string) =>
-    fetcher(`/announcements/${id}/refuse-retour`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    }),
-
   getArchived: (params?: PaginationParams) => 
     fetcher<PaginatedResponse<Announcement>>(`/archive/announcements?${new URLSearchParams(params as Record<string, string>)}`),
 
@@ -872,9 +878,6 @@ export const AnalyticsAPI = {
 
   getActivityTimeline: (period?: string) => 
     fetcher<ActivityData[]>(`/analytics/activity?period=${period || '30'}`),
-
-  getDashboardStats: () => 
-    fetcher<DashboardStatsWithGrowth>('/analytics/dashboard-stats'),
 
   // User-specific analytics
   getMyStats: () => 

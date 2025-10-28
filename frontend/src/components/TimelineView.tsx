@@ -341,5 +341,5 @@ export function ActivityTimeline({
     }
   }));
 
-  return <TimelineView items={timelineItems} groupByDate={true} />;
+  return <TimelineView items={timelineItems as TimelineItemProps[]} groupByDate={true} />;
 }
