@@ -123,6 +123,7 @@ export default function LoginPage() {
                       onChange={handleChange}
                       className="pl-10"
                       placeholder="votre@email.com"
+                      autoComplete="email"
                       required
                     />
                   </div>
@@ -140,6 +141,7 @@ export default function LoginPage() {
                       onChange={handleChange}
                       className="pl-10 pr-10"
                       placeholder="••••••••"
+                      autoComplete="current-password"
                       required
                     />
                     <button

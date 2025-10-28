@@ -35,8 +35,14 @@ const app = express();
 const server = createServer(app);
 const PORT = process.env['PORT'] || 3000;
 
-// Trust proxy configuration - simple and clean
-app.set('trust proxy', process.env['NODE_ENV'] === 'production' ? 1 : false);
+// Trust proxy configuration for production deployment
+if (process.env['NODE_ENV'] === 'production') {
+  // Trust first proxy (for Render.com and similar platforms)
+  app.set('trust proxy', 1);
+} else {
+  // Disable trust proxy in development
+  app.set('trust proxy', false);
+}
 
 // Initialize Socket.IO
 socketService.initialize(server);

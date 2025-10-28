@@ -12,6 +12,10 @@ export const createRateLimit = (windowMs: number = 15 * 60 * 1000, max: number =
     },
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    // Skip successful requests to avoid counting successful responses
+    skipSuccessfulRequests: false,
+    // Skip failed requests to avoid counting failed responses
+    skipFailedRequests: false,
     handler: (_req, res) => {
       res.status(429).json({
         error: 'Trop de requêtes. Veuillez patienter un moment.',
