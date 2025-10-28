@@ -55,6 +55,7 @@ export const corsOptions = {
     process.env['FRONTEND_URL'] || 'http://localhost:3000',
     'https://pharmacie-tn.onrender.com', // Production frontend URL
     'https://pharmacie-tn.netlify.app',  // Alternative deployment URL
+    'https://pharmacy-tn.netlify.app',   // Actual Netlify deployment URL
     'http://localhost:3000'              // Development URL
   ],
   credentials: true,
