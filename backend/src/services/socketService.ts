@@ -10,8 +10,14 @@ export class SocketService {
   initialize(server: HTTPServer): void {
     this.io = new SocketIOServer(server, {
       cors: {
-        origin: process.env['FRONTEND_URL'] || "http://localhost:3000",
-        methods: ["GET", "POST"]
+        origin: [
+          process.env['FRONTEND_URL'] || "http://localhost:3000",
+          'https://pharmacie-tn.onrender.com',
+          'https://pharmacy-tn.netlify.app',
+          'http://localhost:3000'
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
       }
     });
 

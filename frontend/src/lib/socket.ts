@@ -11,7 +11,7 @@ class SocketService {
       return this.socket;
     }
 
-    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://pharmacie-tn.onrender.com';
 
     this.socket = io(SOCKET_URL, {
       auth: {

@@ -158,19 +158,18 @@ export const getActiveSuppliers = async (req: Request, res: Response): Promise<v
         u.name,
         u.email,
         c.name as cityName,
-        c."regionName",
+        c.region as "regionName",
         COUNT(DISTINCT a.id) as announcementsCount,
-        COUNT(DISTINCT ret.id) as retoursCount,
+        0 as retoursCount,
         u."lastLoginAt"
-      FROM "User" u
-      JOIN "Role" role ON u."roleId" = role.id
-      LEFT JOIN "City" c ON u."cityId" = c.id
-      LEFT JOIN "Announcement" a ON u.id = a."userId" AND a."createdAt" >= ${startDate}
-      LEFT JOIN "Retour" ret ON u.id = ret."supplierId" AND ret."createdAt" >= ${startDate}
+      FROM users u
+      JOIN roles role ON u."roleId" = role.id
+      LEFT JOIN cities c ON u."cityId" = c.id
+      LEFT JOIN announcements a ON u.id = a."supplierUserId" AND a."createdAt" >= ${startDate}
       WHERE role.name = 'SUPPLIER' AND u."isActive" = true
-      GROUP BY u.id, u.name, u.email, c.name, c."regionName", u."lastLoginAt"
-      HAVING COUNT(DISTINCT a.id) > 0 OR COUNT(DISTINCT ret.id) > 0
-      ORDER BY (COUNT(DISTINCT a.id) + COUNT(DISTINCT ret.id)) DESC
+      GROUP BY u.id, u.name, u.email, c.name, c.region, u."lastLoginAt"
+      HAVING COUNT(DISTINCT a.id) > 0
+      ORDER BY COUNT(DISTINCT a.id) DESC
       LIMIT 10
     `;
 
