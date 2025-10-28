@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AnnouncementsAPI, ExportAPI } from '@/lib/api';
+import { AnnouncementsAPI, ExportAPI, API_BASE_URL } from '@/lib/api';
 import { UnifiedTable, StatusBadge, ExportButton, Modal, FormField, Skeleton, EmptyState, Textarea } from '@/components';
 import { usePagination } from '@/lib/hooks';
 import { 
@@ -224,7 +224,7 @@ export default function FournisseurRetoursPage() {
               <Phone className="w-4 h-4" />
             </button>
             <button
-              onClick={() => window.open(`/api/export/retour/${row.id}/pdf`, '_blank')}
+              onClick={() => window.open(`${API_BASE_URL}/export/retour/${row.id}/pdf`, '_blank')}
               className="text-blue-600 hover:text-blue-800"
               title="Exporter PDF"
             >

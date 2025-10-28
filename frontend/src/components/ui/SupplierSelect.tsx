@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, X, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { API_BASE_URL } from '@/lib/api';
 
 interface Supplier {
   id: number;
@@ -50,7 +51,7 @@ export default function SupplierSelect({
     setLoading(true);
     try {
       // Use a public endpoint for suppliers that doesn't require admin rights
-      const response = await fetch('/api/suppliers');
+      const response = await fetch(`${API_BASE_URL}/suppliers`);
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -73,7 +74,7 @@ export default function SupplierSelect({
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/suppliers?search=${encodeURIComponent(query)}`);
+      const response = await fetch(`${API_BASE_URL}/suppliers?search=${encodeURIComponent(query)}`);
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
