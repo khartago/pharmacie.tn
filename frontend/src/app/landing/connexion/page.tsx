@@ -114,14 +114,16 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <Input
                       id="email"
                       name="email"
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="pl-10"
+                      className="pl-11"
                       placeholder="votre@email.com"
                       autoComplete="email"
                       required
@@ -132,14 +134,16 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <Label htmlFor="password">Mot de passe</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <Input
                       id="password"
                       name="password"
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={handleChange}
-                      className="pl-10 pr-10"
+                      className="pl-11 pr-11"
                       placeholder="••••••••"
                       autoComplete="current-password"
                       required
@@ -147,7 +151,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />

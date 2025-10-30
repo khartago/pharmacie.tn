@@ -144,18 +144,18 @@ export default function PricingPage() {
       {/* Pricing Plans */}
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
             {pricingPlans.map((plan, index) => (
               <Card 
                 key={index} 
-                className={`relative ${
+                className={`relative h-full flex flex-col overflow-visible ${
                   plan.recommended 
                     ? 'border-primary shadow-lg scale-105' 
                     : 'border-border'
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-3 inset-x-0 z-10 flex justify-center">
                     <Badge className="bg-primary text-primary-foreground">
                       <Star className="w-3 h-3 mr-1" />
                       Populaire
@@ -178,7 +178,7 @@ export default function PricingPage() {
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 flex-1 flex flex-col">
                   {/* Features */}
                   <div>
                     <h4 className="font-semibold text-foreground mb-3 flex items-center">
@@ -225,7 +225,7 @@ export default function PricingPage() {
 
                   {/* CTA Button */}
                   <Button 
-                    className="w-full" 
+                    className="w-full mt-auto" 
                     variant={plan.recommended ? 'default' : 'outline'}
                     asChild
                   >

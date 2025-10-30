@@ -106,14 +106,16 @@ export default function ForgotPasswordPage() {
                   <div className="space-y-2">
                     <Label htmlFor="email">Adresse email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                      </div>
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         value={email}
                         onChange={handleEmailChange}
-                        className="pl-10"
+                        className="pl-11"
                         placeholder="votre@email.com"
                         required
                       />

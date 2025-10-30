@@ -10,7 +10,8 @@ import {
   Clock, 
   Users,
   ArrowRight,
-  Megaphone
+  Megaphone,
+  Star
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -165,18 +166,19 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`card-modern-2025 relative h-full flex flex-col animate-slide-in-bottom animate-hover-lift ${
+                className={`card-modern-2025 relative h-full flex flex-col overflow-visible !overflow-visible animate-slide-in-bottom animate-hover-lift ${
                   plan.popular ? 'ring-2 ring-primary shadow-primary' : ''
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
+                  <div className="absolute -top-3 inset-x-0 z-20 flex justify-center pointer-events-none">
+                    <Badge className="bg-primary text-primary-foreground text-xs sm:text-sm px-3 py-1.5 rounded-full shadow-md border border-primary/30 flex items-center gap-1.5">
+                      <Star className="w-3 h-3" />
                       Recommandé
                     </Badge>
                   </div>
@@ -190,7 +192,7 @@ export default function HomePage() {
                   <CardDescription>/{plan.period}</CardDescription>
                 </CardHeader>
                 
-                <CardContent className="flex-1">
+                <CardContent className="flex-1 flex flex-col">
                   <p className="text-muted-foreground mb-6 text-center text-sm">
                     {plan.description}
                   </p>
@@ -257,3 +259,4 @@ export default function HomePage() {
     </PublicLayout>
   );
 } 
+
