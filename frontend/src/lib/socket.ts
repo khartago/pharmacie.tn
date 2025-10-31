@@ -11,11 +11,46 @@ class SocketService {
       return this.socket;
     }
 
-    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://pharmacie-tn.onrender.com';
+    // Derive socket URL from API URL (remove /api suffix) or use environment variable
+    const getSocketUrl = (): string => {
+      // First check if explicit socket URL is provided
+      if (process.env.NEXT_PUBLIC_SOCKET_URL) {
+        return process.env.NEXT_PUBLIC_SOCKET_URL;
+      }
+      
+      // Otherwise, derive from API URL
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://pharmacie-tn.onrender.com/api';
+      
+      // Remove /api suffix if present and return base URL
+      if (apiUrl.endsWith('/api')) {
+        return apiUrl.slice(0, -4); // Remove '/api'
+      }
+      
+      // If no /api suffix, assume the API URL is already the base
+      return apiUrl.replace('/api', '');
+    };
+
+    const SOCKET_URL = getSocketUrl();
+
+    // Don't connect if no token is available
+    const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!authToken) {
+      console.warn('Socket connection skipped: No authentication token available');
+      // Create a disconnected socket that won't attempt to connect
+      // This prevents "Invalid namespace" errors from trying to connect without auth
+      this.socket = io(SOCKET_URL, {
+        auth: { token: null },
+        autoConnect: false,
+        transports: ['websocket', 'polling'],
+      });
+      // Immediately disconnect to prevent any connection attempts
+      this.socket.disconnect();
+      return this.socket;
+    }
 
     this.socket = io(SOCKET_URL, {
       auth: {
-        token: token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null),
+        token: authToken,
       },
       transports: ['websocket', 'polling'],
       autoConnect: true,
@@ -37,7 +72,15 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      // Only log errors if we have a token (actual connection errors)
+      // If no token, the error is expected and will be handled by the auth middleware
+      const socketAuth = this.socket?.auth as { token?: string } | undefined;
+      const hasToken = socketAuth?.token;
+      if (hasToken) {
+        console.error('Socket connection error:', error);
+      } else {
+        console.warn('Socket connection failed: No authentication token');
+      }
       this.isConnected = false;
     });
 

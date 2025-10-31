@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from '../types';
 import bcrypt from 'bcrypt';
 import { PasswordGenerator } from '../utils/passwordGenerator';
 import { EmailService } from '../services/emailService';
+import { mapRegionToEnum } from '../utils/regionMapping';
 
 export const createPharmacy = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -281,35 +282,7 @@ export const updatePharmacy = async (req: AuthenticatedRequest, res: Response): 
 
     if (cityName && regionName) {
       // Find or create region
-      // Convert region name to enum value
-      const regionMap: { [key: string]: string } = {
-        'Tunis': 'TUNIS',
-        'Ariana': 'ARIANA',
-        'Ben Arous': 'BEN_AROUS',
-        'Manouba': 'MANOUBA',
-        'Nabeul': 'NABEUL',
-        'Zaghouan': 'ZAGHOUAN',
-        'Bizerte': 'BIZERTE',
-        'Béja': 'BEJA',
-        'Jendouba': 'JENDOUBA',
-        'Kef': 'KEF',
-        'Siliana': 'SILIANA',
-        'Sousse': 'SOUSSE',
-        'Monastir': 'MONASTIR',
-        'Mahdia': 'MAHDIA',
-        'Sfax': 'SFAX',
-        'Kairouan': 'KAIROUAN',
-        'Kasserine': 'KASSERINE',
-        'Sidi Bouzid': 'SIDI_BOUZID',
-        'Gabès': 'GABES',
-        'Médenine': 'MEDENINE',
-        'Tataouine': 'TATAOUINE',
-        'Gafsa': 'GAFSA',
-        'Tozeur': 'TOZEUR',
-        'Kébili': 'KEBILI'
-      };
-
-      const regionEnum = regionMap[regionName] || 'TUNIS';
+      const regionEnum = mapRegionToEnum(regionName);
 
               // Find or create city
         let city = await prisma.city.findFirst({

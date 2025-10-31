@@ -70,7 +70,17 @@ export default function TabbedDataLayout({
     try {
       const response = await currentTab.api.getAll();
       if (response.success && response.data) {
-        setData(response.data.data || []);
+        const payload: any = response.data;
+        const normalized: any[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.data)
+            ? payload.data
+            : (() => {
+                // Find first array in payload object (e.g., pharmacies, requests, users, etc.)
+                const firstArray = Object.values(payload).find((v: any) => Array.isArray(v));
+                return Array.isArray(firstArray) ? firstArray : [];
+              })();
+        setData(normalized);
       }
     } catch (error) {
       console.error(`Failed to load ${activeTab} data:`, error);

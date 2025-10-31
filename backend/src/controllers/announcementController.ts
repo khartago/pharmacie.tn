@@ -4,6 +4,7 @@ import prisma from '../lib/prisma';
 import { AuthenticatedRequest, CreateAnnouncementData } from '../types';
 import { NotificationService } from '../services/notificationService';
 import { AuditService } from '../services/auditService';
+import { mapRegionToEnum } from '../utils/regionMapping';
 
 export const getAnnouncements = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -52,36 +53,9 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
 
     // Filter by region (through pharmacy's city)
     if (regionName) {
-      // Convert region name to enum value
-      const regionMap: { [key: string]: string } = {
-        'TUNIS': 'TUNIS',
-        'ARIANA': 'ARIANA',
-        'BEN_AROUS': 'BEN_AROUS',
-        'MANOUBA': 'MANOUBA',
-        'NABEUL': 'NABEUL',
-        'ZAGHOUAN': 'ZAGHOUAN',
-        'BIZERTE': 'BIZERTE',
-        'BEJA': 'BEJA',
-        'JENDOUBA': 'JENDOUBA',
-        'KEF': 'KEF',
-        'SILIANA': 'SILIANA',
-        'SOUSSE': 'SOUSSE',
-        'MONASTIR': 'MONASTIR',
-        'MAHDIA': 'MAHDIA',
-        'SFAX': 'SFAX',
-        'KAIROUAN': 'KAIROUAN',
-        'KASSERINE': 'KASSERINE',
-        'SIDI_BOUZID': 'SIDI_BOUZID',
-        'GABES': 'GABES',
-        'MEDENINE': 'MEDENINE',
-        'TATAOUINE': 'TATAOUINE',
-        'GAFSA': 'GAFSA',
-        'TOZEUR': 'TOZEUR',
-        'KEBILI': 'KEBILI'
-      };
       where.pharmacyUser = {
         city: {
-          region: regionMap[regionName] as any
+          region: mapRegionToEnum(regionName)
         }
       };
     }

@@ -148,7 +148,20 @@ export default function AdminPharmaciesPage() {
       ]);
       
       if (pharmaciesResponse.success && pharmaciesResponse.data) {
-        setPharmacies(pharmaciesResponse.data.data || []);
+        const payload: any = pharmaciesResponse.data;
+        // Try different possible structures
+        const pharmaciesArray = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.data)
+            ? payload.data
+            : Array.isArray(payload.pharmacies)
+              ? payload.pharmacies
+              : (() => {
+                  // Find first array in payload object (e.g., pharmacies, data, etc.)
+                  const firstArray = Object.values(payload).find((v: any) => Array.isArray(v));
+                  return Array.isArray(firstArray) ? firstArray : [];
+                })();
+        setPharmacies(pharmaciesArray);
       }
       
       if (statsResponse.success && statsResponse.data) {

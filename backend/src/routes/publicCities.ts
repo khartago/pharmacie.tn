@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import prisma from '../lib/prisma';
+import { mapRegionToEnum } from '../utils/regionMapping';
 
 const router = express.Router();
 
@@ -19,36 +20,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 
     // Filter by region if provided (check for valid values, not "undefined" string)
     if (region && region !== 'ALL' && region !== 'undefined' && typeof region === 'string') {
-      // Map display names to enum values
-      const regionMap: { [key: string]: string } = {
-        'Tunis': 'TUNIS',
-        'Ariana': 'ARIANA',
-        'Ben Arous': 'BEN_AROUS',
-        'Manouba': 'MANOUBA',
-        'Nabeul': 'NABEUL',
-        'Zaghouan': 'ZAGHOUAN',
-        'Bizerte': 'BIZERTE',
-        'Béja': 'BEJA',
-        'Jendouba': 'JENDOUBA',
-        'Kef': 'KEF',
-        'Siliana': 'SILIANA',
-        'Sousse': 'SOUSSE',
-        'Monastir': 'MONASTIR',
-        'Mahdia': 'MAHDIA',
-        'Sfax': 'SFAX',
-        'Kairouan': 'KAIROUAN',
-        'Kasserine': 'KASSERINE',
-        'Sidi Bouzid': 'SIDI_BOUZID',
-        'Gabès': 'GABES',
-        'Médenine': 'MEDENINE',
-        'Tataouine': 'TATAOUINE',
-        'Gafsa': 'GAFSA',
-        'Tozeur': 'TOZEUR',
-        'Kébili': 'KEBILI'
-      };
-      
-      const regionEnum = regionMap[region] || (region ? region.toUpperCase() : 'TUNIS');
-      where.region = regionEnum as any;
+      where.region = mapRegionToEnum(region);
     }
 
     // Add search functionality (check for valid values, not "undefined" string)
@@ -97,38 +69,10 @@ router.get('/region/:region', asyncHandler(async (req: Request, res: Response) =
   try {
     const { region } = req.params;
     
-    // Map display names to enum values
-    const regionMap: { [key: string]: string } = {
-      'Tunis': 'TUNIS',
-      'Ariana': 'ARIANA',
-      'Ben Arous': 'BEN_AROUS',
-      'Manouba': 'MANOUBA',
-      'Nabeul': 'NABEUL',
-      'Zaghouan': 'ZAGHOUAN',
-      'Bizerte': 'BIZERTE',
-      'Béja': 'BEJA',
-      'Jendouba': 'JENDOUBA',
-      'Kef': 'KEF',
-      'Siliana': 'SILIANA',
-      'Sousse': 'SOUSSE',
-      'Monastir': 'MONASTIR',
-      'Mahdia': 'MAHDIA',
-      'Sfax': 'SFAX',
-      'Kairouan': 'KAIROUAN',
-      'Kasserine': 'KASSERINE',
-      'Sidi Bouzid': 'SIDI_BOUZID',
-      'Gabès': 'GABES',
-      'Médenine': 'MEDENINE',
-      'Tataouine': 'TATAOUINE',
-      'Gafsa': 'GAFSA',
-      'Tozeur': 'TOZEUR',
-      'Kébili': 'KEBILI'
-    };
-
-    const regionEnum = region && regionMap[region] ? regionMap[region] : (region ? region.toUpperCase() : 'TUNIS');
+    const regionEnum = region ? mapRegionToEnum(region) : 'TUNIS';
     
     const cities = await prisma.city.findMany({
-      where: { region: regionEnum as any },
+      where: { region: regionEnum },
       select: {
         id: true,
         name: true,

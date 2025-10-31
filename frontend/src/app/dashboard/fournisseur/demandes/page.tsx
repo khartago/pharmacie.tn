@@ -208,7 +208,7 @@ export default function FournisseurDemandesPage() {
       label: 'Disponibles', 
       count: requests.filter(r => {
         const status = String(r.status || '').toUpperCase();
-        return status === 'OPEN' && !r.response && status !== 'CLOSED' && status !== 'EXPIRED';
+        return status === 'OPEN' && !r.response;
       }).length 
     },
     { 

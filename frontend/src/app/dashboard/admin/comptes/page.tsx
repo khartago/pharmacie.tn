@@ -106,20 +106,44 @@ export default function AdminComptesPage() {
 
   const fetchComptes = async () => {
     try {
-      const [comptesResponse, statsResponse] = await Promise.all([
-        AccountsAPI.getAll(),
-        AnalyticsAPI.getAccountsStats()
+      // Use Promise.allSettled to handle individual failures gracefully
+      const [comptesResult, statsResult] = await Promise.allSettled([
+        AccountsAPI.getAll().catch(() => ({ success: false, data: null })),
+        AnalyticsAPI.getAccountsStats().catch(() => ({ success: false, data: null }))
       ]);
       
-      if (comptesResponse.success && comptesResponse.data) {
-        setComptes(comptesResponse.data.data || []);
+      // Handle comptes response
+      const comptesResponse = comptesResult.status === 'fulfilled' ? comptesResult.value : null;
+      if (comptesResponse?.success && comptesResponse.data) {
+        const payload: any = comptesResponse.data;
+        // Try different possible structures (similar to pharmacies fix)
+        const comptesArray = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.data)
+            ? payload.data
+            : Array.isArray(payload.accounts)
+              ? payload.accounts
+              : (() => {
+                  // Find first array in payload object
+                  const firstArray = Object.values(payload).find((v: any) => Array.isArray(v));
+                  return Array.isArray(firstArray) ? firstArray : [];
+                })();
+        setComptes(comptesArray);
+      } else {
+        // If API endpoint doesn't exist (404) or fails, set empty array
+        setComptes([]);
       }
       
-      if (statsResponse.success && statsResponse.data) {
+      // Handle stats response (optional, so failure is not critical)
+      const statsResponse = statsResult.status === 'fulfilled' ? statsResult.value : null;
+      if (statsResponse?.success && statsResponse.data) {
         setStats(statsResponse.data);
       }
+      // Stats are optional, so we don't need to set anything on failure
     } catch (error) {
       console.error('Failed to fetch comptes:', error);
+      // Set empty arrays on error to prevent display issues
+      setComptes([]);
     } finally {
       setLoading(false);
     }

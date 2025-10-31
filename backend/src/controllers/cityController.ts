@@ -3,6 +3,7 @@ import prisma from '../lib/prisma';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AuditService } from '../services/auditService';
 import { AuthenticatedRequest } from '../types';
+import { mapRegionToEnum, mapEnumToRegion, ENUM_TO_REGION } from '../utils/regionMapping';
 
 // Get all cities with optional filtering
 export const getAllCities = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -12,7 +13,7 @@ export const getAllCities = asyncHandler(async (req: AuthenticatedRequest, res: 
   
   // Filter by region if provided (check for valid values, not "undefined" string)
   if (region && region !== 'all' && region !== 'undefined' && typeof region === 'string') {
-    where.region = region;
+    where.region = mapRegionToEnum(region as string);
   }
   
   // Add search functionality (check for valid values, not "undefined" string)
@@ -39,20 +40,22 @@ export const getAllCities = asyncHandler(async (req: AuthenticatedRequest, res: 
   ]);
 
   const citiesWithUserCount = cities.map((city) => ({
-    id: city.id,
+    id: city.id.toString(),
     name: city.name,
-    region: city.region,
+    region: mapEnumToRegion(city.region),
     userCount: city._count.users
   }));
 
   return res.json({
     success: true,
+    data: {
     data: citiesWithUserCount,
     pagination: {
       page: Number(page),
       limit: Number(limit),
       total,
-      pages: Math.ceil(total / Number(limit))
+        totalPages: Math.ceil(total / Number(limit))
+      }
     }
   });
 });
@@ -87,9 +90,9 @@ export const getCityById = asyncHandler(async (req: AuthenticatedRequest, res: R
   return res.json({
     success: true,
     data: {
-      id: city.id,
+      id: city.id.toString(),
       name: city.name,
-      region: city.region,
+      region: mapEnumToRegion(city.region),
       userCount: city._count.users
     }
   });
@@ -107,11 +110,14 @@ export const createCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
     });
   }
 
+  // Convert display name to enum value
+  const regionEnum = mapRegionToEnum(region);
+
   // Check if city already exists
   const existingCity = await prisma.city.findFirst({
     where: {
       name: { equals: name, mode: 'insensitive' },
-      region
+      region: regionEnum
     }
   });
 
@@ -123,7 +129,7 @@ export const createCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
   }
 
   const city = await prisma.city.create({
-    data: { name, region },
+    data: { name, region: regionEnum },
     include: {
       _count: {
         select: { users: true }
@@ -143,7 +149,7 @@ export const createCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
   return res.status(201).json({
     success: true,
     data: {
-      id: city.id,
+      id: city.id.toString(),
       name: city.name,
       region: city.region,
       userCount: city._count.users
@@ -171,6 +177,9 @@ export const updateCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
     });
   }
 
+  // Convert display name to enum value
+  const regionEnum = mapRegionToEnum(region);
+
   // Check if city exists
   const existingCity = await prisma.city.findUnique({
     where: { id: Number(id) }
@@ -187,7 +196,7 @@ export const updateCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const duplicateCity = await prisma.city.findFirst({
     where: {
       name: { equals: name, mode: 'insensitive' },
-      region,
+      region: regionEnum,
       id: { not: Number(id) }
     }
   });
@@ -201,7 +210,7 @@ export const updateCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const city = await prisma.city.update({
     where: { id: Number(id) },
-    data: { name, region },
+    data: { name, region: regionEnum },
     include: {
       _count: {
         select: { users: true }
@@ -226,9 +235,9 @@ export const updateCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
   return res.json({
     success: true,
     data: {
-      id: city.id,
+      id: city.id.toString(),
       name: city.name,
-      region: city.region,
+      region: mapEnumToRegion(city.region),
       userCount: city._count.users
     }
   });
@@ -291,6 +300,9 @@ export const deleteCity = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
 // Get cities statistics
 export const getCitiesStats = asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+  // Total number of regions in Tunisia (calculated from mapping)
+  const TOTAL_REGIONS = Object.keys(ENUM_TO_REGION).length;
+
   const [total, byRegion, mostUsed] = await Promise.all([
     // Total cities
     prisma.city.count(),
@@ -328,7 +340,8 @@ export const getCitiesStats = asyncHandler(async (_req: AuthenticatedRequest, re
       total,
       byRegion,
       mostUsed,
-      recentlyAdded: 0 // Placeholder since createdAt doesn't exist in City model
+      recentlyAdded: 0, // Placeholder since createdAt doesn't exist in City model
+      totalRegions: TOTAL_REGIONS // Total number of regions in Tunisia
     }
   });
 });

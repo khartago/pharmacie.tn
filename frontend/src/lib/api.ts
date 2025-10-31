@@ -449,11 +449,29 @@ const fetcher = async <T>(
         throw new Error(message);
       }
       
+      // For analytics endpoints, return success with empty data instead of throwing
+      if (endpoint.includes('/analytics/') && data.error) {
+        console.warn(`Analytics API warning: ${data.error}`);
+        return {
+          success: true,
+          data: []
+        } as ApiResponse<T>;
+      }
+      
       throw new Error(data.error || 'Une erreur est survenue');
     }
 
     return data;
   } catch (error) {
+    // Only log non-analytics errors, or log analytics errors at a lower level
+    if (endpoint.includes('/analytics/')) {
+      console.warn(`Analytics API error for ${endpoint}:`, error);
+      // Return success with empty data for analytics endpoints
+      return {
+        success: true,
+        data: []
+      } as ApiResponse<T>;
+    }
     console.error('API request failed:', error);
     throw error;
   }
@@ -918,6 +936,49 @@ export const AnalyticsAPI = {
 
   getAccountsStats: () => 
     fetcher<{ total: number; active: number; inactive: number; new: number; byRole: Record<string, number> }>('/analytics/accounts/stats'),
+
+  // Advanced analytics
+  getConversionFunnel: (period?: string) => 
+    fetcher<{
+      stages: Array<{ stage: string; count: number; percentage: number }>;
+      metrics: {
+        interestRate: number;
+        acceptanceRate: number;
+        fulfillmentRate: number;
+        overallConversion: number;
+      };
+    }>(`/analytics/conversion-funnel?period=${period || '30'}`),
+
+  getSupplierPerformance: (period?: string) => 
+    fetcher<Array<{
+      supplierId: string;
+      supplierName: string;
+      totalAnnouncements: number;
+      totalInterests: number;
+      acceptedInterests: number;
+      avgResponseTime: number;
+      acceptanceRate: number;
+    }>>(`/analytics/supplier-performance?period=${period || '30'}`),
+
+  getRequestFulfillment: (period?: string) => 
+    fetcher<Array<{
+      date: string;
+      totalRequests: number;
+      fulfilledRequests: number;
+      avgTimeToFulfill: number;
+      fulfillmentRate: number;
+    }>>(`/analytics/request-fulfillment?period=${period || '30'}`),
+
+  getRegionalPerformance: (period?: string) => 
+    fetcher<Array<{
+      regionName: string;
+      totalRequests: number;
+      fulfilledRequests: number;
+      totalAnnouncements: number;
+      totalPharmacies: number;
+      totalSuppliers: number;
+      fulfillmentRate: number;
+    }>>(`/analytics/regional-performance?period=${period || '30'}`),
 };
 
 // Export API
@@ -1131,6 +1192,7 @@ export interface CityStats {
   byRegion: Record<string, number>;
   mostUsed: { name: string; count: number };
   recentlyAdded: number;
+  totalRegions?: number;
 }
 
 // Public Cities API (for regular users)

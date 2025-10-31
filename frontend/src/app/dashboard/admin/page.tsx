@@ -40,12 +40,18 @@ export default function AdminDashboard() {
       }
       if (activityResponse.success && activityResponse.data) {
         setActivityData(activityResponse.data);
+      } else {
+        setActivityData([]);
       }
       if (regionResponse.success && regionResponse.data) {
         setRegionData(regionResponse.data);
+      } else {
+        setRegionData([]);
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      // Silently handle analytics errors - set empty data
+      setActivityData([]);
+      setRegionData([]);
     } finally {
       setLoading(false);
     }
@@ -271,8 +277,17 @@ export default function AdminDashboard() {
               </CardTitle>
               <CardDescription className="text-slate-600">Dernières activités sur la plateforme</CardDescription>
             </div>
-            <Button variant="outline" size="sm" className="flex items-center space-x-2 hover:bg-slate-50 transition-colors duration-200">
-              <RefreshCw className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center space-x-2 hover:bg-slate-50 transition-colors duration-200"
+              onClick={() => {
+                setLoading(true);
+                fetchData();
+              }}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Actualiser</span>
             </Button>
           </div>
@@ -303,8 +318,16 @@ export default function AdminDashboard() {
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune activité récente</h3>
                 <p className="text-slate-500 mb-4">Les activités de la plateforme apparaîtront ici</p>
-                <Button variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setLoading(true);
+                    fetchData();
+                  }}
+                  disabled={loading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   Actualiser les données
                 </Button>
               </div>

@@ -14,7 +14,11 @@ import {
   getSuppliersStats,
   getAnnouncementsStats,
   getRequestsStats,
-  getMyStats
+  getMyStats,
+  getConversionFunnel,
+  getSupplierPerformance,
+  getRequestFulfillment,
+  getRegionalPerformance
 } from '../controllers/analyticsController';
 
 const router = Router();
@@ -39,5 +43,9 @@ router.get('/pharmacies/stats', asyncHandler(getPharmaciesStats));
 router.get('/suppliers/stats', asyncHandler(getSuppliersStats));
 router.get('/announcements/stats', asyncHandler(getAnnouncementsStats));
 router.get('/requests/stats', asyncHandler(getRequestsStats));
+router.get('/conversion-funnel', asyncHandler(getConversionFunnel));
+router.get('/supplier-performance', asyncHandler(getSupplierPerformance));
+router.get('/request-fulfillment', asyncHandler(getRequestFulfillment));
+router.get('/regional-performance', asyncHandler(getRegionalPerformance));
 
 export default router; 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, MapPin, Building2, TrendingUp, Calendar, Edit, Trash2 } from 'lucide-react';
 import { UnifiedTable, Modal, Input } from '@/components';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,8 @@ const AdminCitiesPage = () => {
     total: 0,
     byRegion: {},
     mostUsed: { name: '', count: 0 },
-    recentlyAdded: 0
+    recentlyAdded: 0,
+    totalRegions: 24 // Total regions in Tunisia
   });
 
   // Form state
@@ -64,7 +65,7 @@ const AdminCitiesPage = () => {
     }
   ];
 
-  const fetchCities = async () => {
+  const fetchCities = useCallback(async () => {
     try {
       setLoading(true);
       const params: any = {
@@ -91,9 +92,9 @@ const AdminCitiesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, regionFilter]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await AdminCitiesAPI.getStats();
       if (response.success && response.data) {
@@ -102,16 +103,14 @@ const AdminCitiesPage = () => {
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCities();
     fetchStats();
   }, [fetchCities, fetchStats]);
 
-  useEffect(() => {
-    fetchCities();
-  }, [searchTerm, regionFilter, fetchCities]);
+  // Remove the duplicate useEffect since fetchCities already depends on searchTerm and regionFilter
 
   const handleCreate = () => {
     setEditingCity(null);
@@ -243,7 +242,7 @@ const AdminCitiesPage = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-600">Régions</p>
-                  <p className="text-2xl font-bold text-slate-900">{Object.keys(stats.byRegion).length}</p>
+                  <p className="text-2xl font-bold text-slate-900">{stats.totalRegions ?? Object.keys(stats.byRegion).length}</p>
                 </div>
               </div>
             </div>
