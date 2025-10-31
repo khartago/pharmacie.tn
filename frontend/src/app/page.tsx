@@ -11,7 +11,8 @@ import {
   Users,
   ArrowRight,
   Megaphone,
-  Star
+  Star,
+  Eye
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -78,7 +79,8 @@ export default function HomePage() {
       ],
       popular: false,
       color: 'purple',
-      warning: 'Cette option est disponible uniquement en complément du Pack Standard'
+      warning: 'Cette option est disponible uniquement en complément du Pack Standard',
+      showExample: true
     },
     {
       name: 'Pack Complet',
@@ -214,11 +216,21 @@ export default function HomePage() {
                     </div>
                   )}
                   
-                  <Button asChild className="w-full mt-auto bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                    <Link href="/landing/contact">
-                      Nous contacter
-                    </Link>
-                  </Button>
+                  <div className="flex flex-col gap-2 mt-auto">
+                    {plan.showExample && (
+                      <Button asChild variant="outline" className="w-full border-purple-500 text-purple-600 hover:bg-purple-50">
+                        <Link href="/landing/site-vitrine-exemple">
+                          <Eye className="w-4 h-4 mr-2" />
+                          Voir un exemple
+                        </Link>
+                      </Button>
+                    )}
+                    <Button asChild className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
+                      <Link href="/landing/contact">
+                        Nous contacter
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

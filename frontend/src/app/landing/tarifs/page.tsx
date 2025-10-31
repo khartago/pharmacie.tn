@@ -6,7 +6,8 @@ import {
   X,
   Star,
   ArrowRight,
-  Info
+  Info,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,7 +70,8 @@ export default function PricingPage() {
       popular: false,
       recommended: false,
       color: 'purple',
-      warning: 'Cette option est disponible uniquement en complément du Pack Standard'
+      warning: 'Cette option est disponible uniquement en complément du Pack Standard',
+      showExample: true
     },
     {
       name: 'Pack Complet',
@@ -221,6 +223,20 @@ export default function PricingPage() {
                         <p className="text-sm text-yellow-800">{plan.warning}</p>
                       </div>
                     </div>
+                  )}
+
+                  {/* View Example Button for Site Vitrine */}
+                  {plan.showExample && (
+                    <Button 
+                      className="w-full mb-2" 
+                      variant="outline"
+                      asChild
+                    >
+                      <Link href="/landing/site-vitrine-exemple">
+                        <Eye className="w-4 h-4 mr-2" />
+                        Voir un exemple
+                      </Link>
+                    </Button>
                   )}
 
                   {/* CTA Button */}
