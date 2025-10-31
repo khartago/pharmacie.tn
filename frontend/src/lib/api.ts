@@ -604,7 +604,7 @@ export const AnnouncementsAPI = {
 
 // Requests API
 export const RequestsAPI = {
-  getAll: (params?: PaginationParams & { status?: string; excludeMine?: boolean; userOnly?: boolean; hasResponse?: boolean }) => 
+  getAll: (params?: PaginationParams & { status?: string; statusIn?: string; excludeMine?: boolean; userOnly?: boolean; hasResponse?: boolean; archives?: string | boolean }) => 
     fetcher<PaginatedResponse<Request>>(`/requests?${new URLSearchParams(params as Record<string, string>)}`),
 
   getById: (id: string) => 

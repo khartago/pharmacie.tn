@@ -16,7 +16,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     const where: any = {
-      role: 'SUPPLIER',
+      role: { name: 'SUPPLIER' },
       isActive: true
     };
 

@@ -354,8 +354,8 @@ function PharmacieAnnoncesContent() {
     if (!formData.medicineId) newErrors.medicineId = 'Médicament requis';
     if (!formData.quantity || formData.quantity <= 0) newErrors.quantity = 'Quantité requise';
     if (!formData.expiryDate) newErrors.expiryDate = 'Date d\'expiration requise';
-    if (formData.visibleToSupplier && !formData.supplierUserId) {
-      newErrors.supplierUserId = 'Fournisseur requis si visible';
+    if (formData.visibleToSupplier && !formData.supplierUserId && !formData.supplierName) {
+      newErrors.supplierUserId = 'Fournisseur requis si visible (sélection ou saisie)';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -365,10 +365,40 @@ function PharmacieAnnoncesContent() {
 
     try {
       let response;
+      // Normalize payload
+      const isoDate = (() => {
+        const raw = String(formData.expiryDate);
+        // Accept formats like YYYY-MM-DD or DD.MM.YYYY
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+        const m = raw.match(/^(\d{2})[\.\/-](\d{2})[\.\/-](\d{4})$/);
+        if (m) {
+          const [_, d, mo, y] = m;
+          return `${y}-${mo}-${d}`;
+        }
+        // Fallback to Date parsing
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) {
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${d.getFullYear()}-${mm}-${dd}`;
+        }
+        return raw;
+      })();
+      const payload = {
+        medicineId: formData.medicineId,
+        quantity: formData.quantity,
+        expiryDate: isoDate,
+        visibleToSupplier: formData.visibleToSupplier ?? true,
+        ...(formData.supplierUserId
+          ? { supplierUserId: formData.supplierUserId }
+          : formData.supplierName
+            ? { manualSupplierName: formData.supplierName }
+            : {})
+      };
       if (editingAnnouncement) {
-        response = await updateAnnouncement(editingAnnouncement.id.toString(), formData);
+        response = await updateAnnouncement(editingAnnouncement.id.toString(), payload);
       } else {
-        response = await createAnnouncement(formData);
+        response = await createAnnouncement(payload);
       }
 
       if (response?.success) {
@@ -587,9 +617,15 @@ function PharmacieAnnoncesContent() {
                   </div>
                 </div>
               ) : userInterestStatus === 'ACCEPTED' ? (
-                // Interest accepted - show contact info
-                <div className="w-full bg-gradient-to-r from-green-100 to-green-200 text-green-800 font-bold py-4 px-6 rounded-xl text-base text-center border border-green-300">
-                  <div className="flex items-center justify-center space-x-2">
+                // Interest accepted - show contact info + action
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => { setSelectedInterest({ pharmacy: item.pharmacyUser }); setShowContactModal(true); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedInterest({ pharmacy: item.pharmacyUser }); setShowContactModal(true); } }}
+                  className="w-full cursor-pointer bg-gradient-to-r from-green-100 to-green-200 text-green-800 rounded-xl border border-green-300 p-4 text-center hover:from-green-200 hover:to-green-300 transition-colors"
+                >
+                  <div className="flex items-center justify-center space-x-2 font-bold">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -892,8 +928,14 @@ function PharmacieAnnoncesContent() {
                   </div>
                 )}
                 {item.interestStatus === 'ACCEPTED' && (
-                  <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
-                    Demande acceptée - Contact révélé
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setSelectedInterest({ pharmacy: item.pharmacyUser }); setShowContactModal(true); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedInterest({ pharmacy: item.pharmacyUser }); setShowContactModal(true); } }}
+                    className="text-sm cursor-pointer text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
+                  >
+                    Demande acceptée - Contact révélé (cliquer pour voir)
                   </div>
                 )}
                 {item.interestStatus === 'REFUSED' && (
@@ -1662,6 +1704,7 @@ function PharmacieAnnoncesContent() {
               type="date"
               value={formData.expiryDate || ''}
               onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+              placeholder="tt.mm.jjjj"
             />
           </FormField>
 
@@ -1693,7 +1736,7 @@ function PharmacieAnnoncesContent() {
                 onChange={(e) => setFormData({ ...formData, visibleToSupplier: e.target.checked })}
               />
               <label htmlFor="visibleToSupplier" className="text-sm font-medium">
-                Visible aux fournisseurs
+                Visible aux fournisseurs (retour)
               </label>
             </div>
           )}
@@ -1724,16 +1767,45 @@ function PharmacieAnnoncesContent() {
           title="Contact de la pharmacie"
           size="md"
         >
-          <ContactCard
-            contact={{
-              name: selectedInterest.pharmacy?.name,
-              email: selectedInterest.pharmacy?.email,
-              phone: selectedInterest.pharmacy?.phone,
-              address: selectedInterest.pharmacy?.address,
-              city: selectedInterest.pharmacy?.city?.name,
-              region: selectedInterest.pharmacy?.city?.region
-            }}
-          />
+          <div className="space-y-4">
+            <ContactCard
+              contact={{
+                name: selectedInterest.pharmacy?.name,
+                email: selectedInterest.pharmacy?.email,
+                phone: selectedInterest.pharmacy?.phone,
+                address: selectedInterest.pharmacy?.address,
+                city: selectedInterest.pharmacy?.city?.name,
+                region: selectedInterest.pharmacy?.city?.region
+              }}
+              title="Coordonnées de la pharmacie"
+              className="w-full"
+              showActions
+            />
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-50"
+              >
+                Fermer
+              </button>
+              {selectedInterest.pharmacy?.phone && (
+                <a
+                  href={`tel:${selectedInterest.pharmacy.phone}`}
+                  className="px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Appeler
+                </a>
+              )}
+              {selectedInterest.pharmacy?.email && (
+                <a
+                  href={`mailto:${selectedInterest.pharmacy.email}`}
+                  className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Envoyer un email
+                </a>
+              )}
+            </div>
+          </div>
         </Modal>
       )}
 

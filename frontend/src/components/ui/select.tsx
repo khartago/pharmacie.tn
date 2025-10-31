@@ -19,7 +19,7 @@ export interface SelectProps {
 }
 
 const Select = React.forwardRef<HTMLDivElement, SelectProps>(
-  ({ placeholder, value, onChange, options = [], disabled = false, className, ...props }) => {
+  ({ placeholder, value, onChange, options = [], disabled = false, className, ...props }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const selectRef = useRef<HTMLDivElement>(null);
@@ -61,7 +61,12 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
     return (
       <div
-        ref={selectRef}
+        ref={(node) => {
+          // Keep internal ref behavior and expose forwarded ref
+          (selectRef as any).current = node;
+          if (typeof ref === 'function') ref(node);
+          else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }}
         className={cn("relative", className)}
         {...props}
       >
@@ -77,13 +82,13 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           )}
         >
           <span className={cn(
-            "truncate",
+            "truncate flex-1 text-left",
             !selectedOption && "text-muted-foreground"
           )}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown className={cn(
-            "h-4 w-4 opacity-50 transition-transform",
+            "h-4 w-4 opacity-50 transition-transform flex-shrink-0 ml-2 pointer-events-none",
             isOpen && "rotate-180"
           )} />
         </button>

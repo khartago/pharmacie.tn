@@ -78,7 +78,9 @@ export default function MedicineAutocomplete({
     try {
       const response = await MedicinesAPI.search({ query });
       if (response.success && response.data) {
-        setMedicines(response.data.data || []);
+        // Support both { data: { medicines, pagination } } and { data: { data, pagination } }
+        const list = (response as any).data?.medicines ?? (response as any).data?.data ?? [];
+        setMedicines(list);
       }
     } catch (error) {
       console.error('Failed to search medicines:', error);
@@ -189,7 +191,9 @@ export default function MedicineAutocomplete({
   return (
     <div className="relative" ref={dropdownRef}>
       <div className="relative">
-        <Search className="absolute left-3 top-2.5 text-gray-400 h-4 w-4 pointer-events-none" />
+        <div className="absolute left-3 top-0 bottom-0 flex items-center pointer-events-none z-10">
+          <Search className="text-gray-400 h-4 w-4 flex-shrink-0" />
+        </div>
         <input
           ref={inputRef}
           type="text"
@@ -200,7 +204,7 @@ export default function MedicineAutocomplete({
           placeholder={placeholder}
           disabled={disabled}
           className={cn(
-            "w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors",
+            "flex h-10 w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-sm leading-normal",
             error ? "border-red-500 focus:ring-red-500" : "border-gray-300",
             disabled ? "bg-gray-50 cursor-not-allowed" : "bg-white",
             className
@@ -210,14 +214,14 @@ export default function MedicineAutocomplete({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-2.5 flex items-center justify-center w-4 h-4 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-0 bottom-0 flex items-center justify-center w-4 h-4 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded z-10 my-auto"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 flex-shrink-0" />
           </button>
         )}
         {loading && (
-          <div className="absolute right-3 top-2.5 flex items-center justify-center w-4 h-4">
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          <div className="absolute right-3 top-0 bottom-0 flex items-center justify-center w-4 h-4 pointer-events-none z-10 my-auto">
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400 flex-shrink-0" />
           </div>
         )}
       </div>

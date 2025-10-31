@@ -75,7 +75,8 @@ export interface CreateAnnouncementData {
   medicineId: number;
   quantity: number;
   expiryDate: string;
-  supplierUserId: string;
+  supplierUserId?: string;
+  manualSupplierName?: string;
   visibleToSupplier?: boolean;
 }
 

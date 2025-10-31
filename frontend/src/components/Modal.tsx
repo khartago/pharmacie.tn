@@ -49,17 +49,17 @@ export default function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 z-[50] bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div
         className={cn(
-          "relative bg-white rounded-lg shadow-lg w-full mx-4 max-h-[90vh] overflow-y-auto",
+          "relative z-[60] bg-white rounded-lg shadow-lg w-full mx-4 max-h-[90vh] overflow-y-auto",
           sizeClasses[size],
           className
         )}
@@ -70,9 +70,10 @@ export default function Modal({
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 rounded-md p-1"
+              aria-label="Fermer"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         )}

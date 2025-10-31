@@ -35,6 +35,7 @@ export { default as CountdownTimer, CircularCountdown } from './CountdownTimer';
 export { Input } from './ui/input';
 export { Textarea } from './ui/textarea';
 export { Select } from './ui/select';
+export { default as MultiSelect } from './ui/multi-select';
 export { Checkbox } from './ui/checkbox';
 export { Radio } from './ui/radio';
 

@@ -7,8 +7,67 @@ import { AuditService } from '../services/auditService';
 
 export const getRequests = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { page = 1, limit = 21, status, medicineId, scope, cityId, regionName } = req.query as any;
+    const { page = 1, limit = 21, status, statusIn, medicineId, scope, cityId, regionName, excludeMine, userOnly, archives } = req.query as any;
     const skip = (page - 1) * limit;
+
+    // Archives view: closed/expired created by me OR accepted by me
+    if (String(archives).toLowerCase() === 'true') {
+      const endStatuses = ['CLOSED', 'EXPIRED'] as const;
+      const [mine, acceptedByMe] = await Promise.all([
+        prisma.request.findMany({
+          where: { userId: req.user!.id, status: { in: endStatuses as any } },
+          include: {
+            medicine: true,
+            user: { select: { id: true, name: true, phone: true, city: true } },
+            responses: {
+              include: { pharmacyUser: { select: { id: true, name: true, phone: true, city: true } } },
+              orderBy: { createdAt: 'desc' }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.requestResponse.findMany({
+          where: {
+            pharmacyUserId: req.user!.id,
+            status: 'ACCEPTED',
+            request: { status: { in: endStatuses as any } }
+          },
+          include: {
+            request: {
+              include: {
+                medicine: true,
+                user: { select: { id: true, name: true, phone: true, city: true } },
+                responses: {
+                  include: { pharmacyUser: { select: { id: true, name: true, phone: true, city: true } } },
+                  orderBy: { createdAt: 'desc' }
+                }
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        })
+      ]);
+
+      const acceptedRequests = acceptedByMe.map((r: any) => r.request).filter(Boolean);
+      const all = [...mine, ...acceptedRequests];
+      const dedup = Object.values(Object.fromEntries(all.map((r: any) => [r.id, r])));
+      const total = dedup.length;
+      const paged = dedup.slice(skip, skip + Number(limit));
+
+      res.json({
+        success: true,
+        data: {
+          requests: paged,
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPages: Math.ceil(total / Number(limit) || 1)
+          }
+        }
+      });
+      return;
+    }
 
     const where: any = {};
 
@@ -41,35 +100,29 @@ export const getRequests = async (req: AuthenticatedRequest, res: Response): Pro
       };
     }
 
-    // Filter requests based on user role and scope
-    if (req.user?.role.name === RoleType.ADMIN) {
-      // Admins can see all requests
-    } else if (req.user?.role.name === RoleType.PHARMACY) {
-      // Pharmacies can see requests relevant to their location
-      const userCity = req.user.city;
-      if (userCity) {
-        where.OR = [
-          // Requests for all Tunisia
-          { scope: 'ALL_TUNISIA' },
-          // Requests for their region
-          {
-            scope: 'REGION',
-            regions: {
-              array_contains: [userCity.region]
-            }
-          },
-          // Requests for their city
-          {
-            scope: 'CITY',
-            cities: {
-              array_contains: [userCity.id]
-            }
-          }
-        ];
-      }
-    } else {
-      // Other users see only their own requests
+    // Universal filtering flags (no role constraint)
+    if (String(userOnly).toLowerCase() === 'true') {
       where.userId = req.user!.id;
+      // For "mes-demandes" tab: exclude CLOSED and EXPIRED (they should be in archives)
+      // Only exclude if archives is not explicitly requested, statusIn is not specified, and status is not explicitly set
+      if (String(archives).toLowerCase() !== 'true' && !statusIn && !status) {
+        where.status = { notIn: ['CLOSED', 'EXPIRED'] as any };
+      }
+    }
+    if (String(excludeMine).toLowerCase() === 'true') {
+      where.userId = { not: req.user!.id } as any;
+      // For "disponibles" tab: exclude CLOSED and EXPIRED
+      // Only if statusIn and status are not specified (allows override)
+      if (!statusIn && !status) {
+        where.status = { notIn: ['CLOSED', 'EXPIRED'] as any };
+      }
+    }
+    if (statusIn) {
+      const list = String(statusIn).split(',').map(s => s.trim()).filter(Boolean);
+      if (list.length) {
+        // If statusIn is specified, override any previous status filter
+        where.status = { in: list as any };
+      }
     }
 
     const [requests, total] = await Promise.all([
@@ -77,28 +130,32 @@ export const getRequests = async (req: AuthenticatedRequest, res: Response): Pro
         where,
         include: {
           medicine: true,
-                     user: {
-             select: {
-               id: true,
-               name: true,
-               phone: true,
-               city: true
-                           }
-            },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              address: true,
+              city: true
+            }
+          },
             responses: {
               include: {
                 pharmacyUser: {
                   select: {
                     id: true,
                     name: true,
+                    email: true,
                     phone: true,
+                    address: true,
                     city: true
                   }
                 }
               },
-            orderBy: {
-              createdAt: 'desc'
-            }
+              orderBy: {
+                createdAt: 'desc'
+              }
           }
         },
         skip,
@@ -627,7 +684,8 @@ export const markRequestAsCompleted = async (req: AuthenticatedRequest, res: Res
       include: {
         responses: {
           where: {
-            pharmacyUserId: req.user!.id
+            pharmacyUserId: req.user!.id,
+            status: 'ACCEPTED'
           }
         }
       }
@@ -641,14 +699,14 @@ export const markRequestAsCompleted = async (req: AuthenticatedRequest, res: Res
       return;
     }
 
-    // Vérifier que l'utilisateur est soit le demandeur soit un répondant
+    // Vérifier que l'utilisateur est soit le demandeur soit un répondant avec réponse ACCEPTED
     const isRequester = request.userId === req.user!.id;
     const isResponder = request.responses.length > 0;
 
     if (!isRequester && !isResponder) {
       res.status(403).json({
         success: false,
-        error: 'You can only mark as completed requests you created or responded to'
+        error: 'You can only mark as completed requests you created or have an accepted response to'
       });
       return;
     }
@@ -691,6 +749,13 @@ export const getMyResponses = async (req: AuthenticatedRequest, res: Response): 
       where.status = status;
     }
 
+    // Exclude responses for CLOSED or EXPIRED requests (they belong in archives)
+    where.request = {
+      status: {
+        notIn: ['CLOSED', 'EXPIRED'] as any
+      }
+    };
+
     const [responses, total] = await Promise.all([
       prisma.requestResponse.findMany({
         where,
@@ -702,7 +767,9 @@ export const getMyResponses = async (req: AuthenticatedRequest, res: Response): 
                 select: {
                   id: true,
                   name: true,
+                  email: true,
                   phone: true,
+                  address: true,
                   city: true
                 }
               }

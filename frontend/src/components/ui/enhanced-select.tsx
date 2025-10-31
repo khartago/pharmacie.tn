@@ -154,7 +154,7 @@ interface EnhancedSelectProps {
 const EnhancedSelect = React.forwardRef<
   HTMLDivElement,
   EnhancedSelectProps
->(({ value, onValueChange, placeholder, children, className, disabled, ...props }) => {
+>(({ value, onValueChange, placeholder, children, className, disabled, ...props }, _ref) => {
   const [searchTerm, setSearchTerm] = React.useState("")
   const [isOpen, setIsOpen] = React.useState(false)
   const triggerRef = React.useRef<HTMLButtonElement>(null)

@@ -440,34 +440,51 @@ async function main() {
 
   // Create requests (pharmacies requesting medicines)
   console.log('📋 Creating medicine requests...');
-  const requestStatuses = [RequestStatus.OPEN, RequestStatus.ACCEPTED, RequestStatus.CLOSED, RequestStatus.EXPIRED];
-  const regions = Object.values(Region);
-  
-  const createdRequests = [];
+  const createdRequests: any[] = [];
   const numRequests = Math.min(medicines.length * 0.3, 100); // 30% of medicines or max 100
 
   for (let i = 0; i < numRequests; i++) {
     const medicine = randomChoice(medicines);
     const pharmacy = randomChoice(createdPharmacyUsers);
     const quantity = randomInt(5, 100);
-    const status = randomChoice(requestStatuses);
-    const region = randomChoice(regions);
     const createdAt = randomDate(new Date(2024, 0, 1), new Date());
+
+    // Choose a scope: ALL_TUNISIA, REGION, or CITY
+    const scopeType = randomChoice(['ALL_TUNISIA', 'REGION', 'CITY'] as const);
+
+    // Build scope-specific fields
+    let cities: number[] | undefined;
+    let regionsForReq: string[] | undefined;
+    if (scopeType === 'REGION') {
+      const pickedRegions = Array.from(new Set(Array.from({ length: randomInt(1, 2) }).map(() => randomChoice(Object.values(Region)))));
+      regionsForReq = pickedRegions as string[];
+    } else if (scopeType === 'CITY') {
+      // Pick 1-3 cities (optionally filtered to a region)
+      const citiesPool = await prisma.city.findMany({ take: 10 });
+      const count = Math.min(randomInt(1, 3), citiesPool.length);
+      const picked = new Set<number>();
+      while (picked.size < count) {
+        picked.add(randomChoice(citiesPool).id);
+      }
+      cities = Array.from(picked);
+    }
 
     const request = await prisma.request.create({
       data: {
         userId: pharmacy.id,
         medicineId: medicine.id,
         quantity,
-        status,
-        region,
+        scope: scopeType as any,
+        ...(cities ? { cities } : {}),
+        ...(regionsForReq ? { regions: regionsForReq } : {}),
+        status: RequestStatus.OPEN,
         createdAt,
       },
     });
     createdRequests.push(request);
   }
 
-  console.log(`✅ Created ${createdRequests.length} medicine requests`);
+  console.log(`✅ Created ${createdRequests.length} medicine requests (OPEN)`);
 
   // Create request responses (pharmacies responding to requests)
   console.log('💬 Creating request responses...');

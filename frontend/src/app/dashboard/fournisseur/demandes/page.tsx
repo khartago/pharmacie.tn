@@ -5,6 +5,7 @@ import { RequestsAPI, ExportAPI } from '@/lib/api';
 import { UnifiedTable, StatusBadge, ExportButton, Modal, FormField, Skeleton, EmptyState, Input, Textarea, Select } from '@/components';
 import { Label } from '@/components/ui/label';
 import { usePagination } from '@/lib/hooks';
+import { formatDate } from '@/lib/utils/formatters';
 import { 
   ClipboardDocumentListIcon, 
   ChatBubbleLeftRightIcon,
@@ -12,6 +13,7 @@ import {
   TrashIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
+import { Clock, CheckCircle2 } from 'lucide-react';
 
 export default function FournisseurDemandesPage() {
   const [activeTab, setActiveTab] = useState('disponibles');
@@ -50,7 +52,7 @@ export default function FournisseurDemandesPage() {
           response = await RequestsAPI.getAll({ ...params, userOnly: true, hasResponse: true });
           break;
         case 'archives':
-          response = await RequestsAPI.getAll({ ...params, status: 'CLOSED', userOnly: true });
+          response = await RequestsAPI.getAll({ ...params, archives: 'true', userOnly: true });
           break;
         default:
           response = await RequestsAPI.getAll(params);
@@ -58,7 +60,16 @@ export default function FournisseurDemandesPage() {
       
       if (response.success && response.data) {
         const data = response.data;
-        const requests = Array.isArray(data) ? data : (data as any).requests || [];
+        let requests = Array.isArray(data) ? data : (data as any).requests || (data as any).data || [];
+        
+        // Apply client-side filters to exclude CLOSED/EXPIRED from non-archives tabs
+        if (activeTab !== 'archives') {
+          requests = requests.filter((req: any) => {
+            const statusUpper = String(req.status || '').toUpperCase();
+            return statusUpper !== 'CLOSED' && statusUpper !== 'EXPIRED';
+          });
+        }
+        
         setRequests(requests);
         
         // Update pagination info from server response
@@ -192,15 +203,36 @@ export default function FournisseurDemandesPage() {
   ];
 
   const tabs = [
-    { id: 'disponibles', label: 'Disponibles', count: requests.filter(r => r.status === 'OPEN' && !r.response).length },
-    { id: 'reponses', label: 'Réponses envoyées', count: requests.filter(r => r.response).length },
-    { id: 'archives', label: 'Archives', count: requests.filter(r => r.status === 'CLOSED').length }
+    { 
+      id: 'disponibles', 
+      label: 'Disponibles', 
+      count: requests.filter(r => {
+        const status = String(r.status || '').toUpperCase();
+        return status === 'OPEN' && !r.response && status !== 'CLOSED' && status !== 'EXPIRED';
+      }).length 
+    },
+    { 
+      id: 'reponses', 
+      label: 'Réponses envoyées', 
+      count: requests.filter(r => {
+        const status = String(r.status || '').toUpperCase();
+        return r.response && status !== 'CLOSED' && status !== 'EXPIRED';
+      }).length 
+    },
+    { 
+      id: 'archives', 
+      label: 'Archives', 
+      count: requests.filter(r => {
+        const status = String(r.status || '').toUpperCase();
+        return status === 'CLOSED' || status === 'EXPIRED';
+      }).length 
+    }
   ];
 
   // Card content renderer
   const renderCardContent = (item: any) => {
     return (
-      <div className="group relative overflow-hidden">
+      <div className="group relative overflow-hidden h-full min-h-[380px] flex flex-col rounded-xl">
         {/* Status Badge */}
         <div className="absolute top-4 right-4 z-10">
           <div className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -217,7 +249,7 @@ export default function FournisseurDemandesPage() {
         </div>
 
         {/* Medicine Header */}
-        <div className="p-6 pb-4">
+        <div className="p-6 pb-4 flex-1 flex flex-col">
           <div className="mb-4">
             <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{item.medicine?.brandName || 'Nom non disponible'}</h3>
             <div className="text-sm text-gray-600 mb-1">{item.medicine?.dci || 'DCI non disponible'}</div>
@@ -231,9 +263,67 @@ export default function FournisseurDemandesPage() {
               <div className="text-xs text-blue-600 font-medium">Quantité demandée</div>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center">
-              <div className="text-lg font-bold text-gray-700">{new Date(item.expiryDate).toLocaleDateString('fr-FR')}</div>
-              <div className="text-xs text-gray-600 font-medium">Date limite</div>
+              <div className="text-lg font-bold text-gray-700">{formatDate(item.createdAt)}</div>
+              <div className="text-xs text-gray-600 font-medium">Date de création</div>
             </div>
+          </div>
+
+          {/* Status Info - Enhanced for All Tabs */}
+          <div className="mb-4">
+            {item.status === 'OPEN' && (
+              <div className="p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold text-green-900">Demande ouverte</div>
+                    <div className="text-xs text-green-700 mt-1">Cette demande est active et en attente de réponses</div>
+                  </div>
+                </div>
+                {item.createdAt && (
+                  <div className="text-xs text-green-600 text-center mt-2 pt-2 border-t border-green-200">
+                    Créée le {formatDate(item.createdAt)}
+                  </div>
+                )}
+              </div>
+            )}
+            {item.status === 'EXPIRED' && (
+              <div className="p-5 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200">
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  <div className="p-2 bg-orange-100 rounded-full">
+                    <Clock className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold text-orange-900">Demande expirée</div>
+                    <div className="text-xs text-orange-700 mt-1">Cette demande a dépassé sa durée de validité</div>
+                  </div>
+                </div>
+                {item.updatedAt && (
+                  <div className="text-xs text-orange-600 text-center mt-2 pt-2 border-t border-orange-200">
+                    Expirée le {formatDate(item.updatedAt)}
+                  </div>
+                )}
+              </div>
+            )}
+            {item.status === 'CLOSED' && (
+              <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  <div className="p-2 bg-blue-100 rounded-full">
+                    <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-bold text-blue-900">Demande terminée</div>
+                    <div className="text-xs text-blue-700 mt-1">Cette demande a été marquée comme complétée</div>
+                  </div>
+                </div>
+                {item.updatedAt && (
+                  <div className="text-xs text-blue-600 text-center mt-2 pt-2 border-t border-blue-200">
+                    Fermée le {formatDate(item.updatedAt)}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Request Details */}
@@ -259,9 +349,9 @@ export default function FournisseurDemandesPage() {
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="text-xs text-green-600 font-medium mb-1">Pharmacie</div>
-                <div className="text-sm font-semibold text-gray-900">{item.pharmacyName || 'Non spécifiée'}</div>
-                <div className="text-xs text-gray-600">{item.pharmacyRegion || 'Région non spécifiée'}</div>
+                <div className="text-xs text-green-600 font-medium mb-1">Pharmacie demandeuse</div>
+                <div className="text-sm font-semibold text-gray-900">{item.user?.name || item.pharmacyName || 'Non spécifiée'}</div>
+                <div className="text-xs text-gray-600">{item.user?.city?.name ? `${item.user.city.name}, ${item.user.city.region}` : (item.pharmacyRegion || 'Région non spécifiée')}</div>
               </div>
             </div>
           </div>
@@ -279,36 +369,38 @@ export default function FournisseurDemandesPage() {
             </div>
           )}
 
-          {/* Action Button */}
-          {activeTab === 'disponibles' && (
-            <button
-              onClick={() => {
-                setSelectedRequest(item);
-                handleRespond();
-              }}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                <span>Répondre à la demande</span>
-              </div>
-            </button>
-          )}
+          {/* Action Buttons (stick to bottom) */}
+          <div className="mt-auto">
+            {activeTab === 'disponibles' && (
+              <button
+                onClick={() => {
+                  setSelectedRequest(item);
+                  openResponseModal(item);
+                }}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                  <span>Répondre à la demande</span>
+                </div>
+              </button>
+            )}
 
-          {activeTab === 'reponses' && (
-            <div className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 font-bold py-4 px-6 rounded-xl text-base text-center">
-              <div className="flex items-center justify-center space-x-2">
-                <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                <span>Réponse envoyée</span>
+            {activeTab === 'reponses' && (
+              <div className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 font-bold py-4 px-6 rounded-xl text-base text-center">
+                <div className="flex items-center justify-center space-x-2">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                  <span>Réponse envoyée</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
           <div className="text-xs text-gray-500">
-            Créée le {new Date(item.createdAt).toLocaleDateString('fr-FR')}
+            Créée le {item.createdAt ? formatDate(item.createdAt) : 'Date non disponible'}
           </div>
         </div>
       </div>

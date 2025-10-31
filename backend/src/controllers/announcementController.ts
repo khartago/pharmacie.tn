@@ -286,7 +286,7 @@ export const getAnnouncementById = async (req: AuthenticatedRequest, res: Respon
 
 export const createAnnouncement = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { medicineId, quantity, expiryDate, supplierUserId, visibleToSupplier = true }: CreateAnnouncementData = req.body;
+    const { medicineId, quantity, expiryDate, supplierUserId, manualSupplierName, visibleToSupplier = true }: CreateAnnouncementData = req.body;
 
     // Only pharmacies can create announcements
     if (req.user?.role.name !== RoleType.PHARMACY) {
@@ -298,10 +298,10 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
     }
 
     // Validate required fields
-    if (!medicineId || !quantity || !expiryDate || !supplierUserId) {
+    if (!medicineId || !quantity || !expiryDate || (!supplierUserId && !manualSupplierName)) {
       res.status(400).json({
         success: false,
-        error: 'Medicine ID, quantity, expiry date, and supplier ID are required'
+        error: 'Medicine ID, quantity, expiry date, and supplier (ID or name) are required'
       });
       return;
     }
@@ -319,23 +319,25 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
       return;
     }
 
-    // Verify supplier exists
-    const supplier = await prisma.user.findFirst({
-      where: {
-        id: supplierUserId,
-        role: {
-          name: RoleType.SUPPLIER
-        },
-        isActive: true
-      }
-    });
-
-    if (!supplier) {
-      res.status(404).json({
-        success: false,
-        error: 'Supplier not found'
+    // Verify supplier exists only if supplierUserId provided
+    if (supplierUserId) {
+      const supplier = await prisma.user.findFirst({
+        where: {
+          id: supplierUserId,
+          role: {
+            name: RoleType.SUPPLIER
+          },
+          isActive: true
+        }
       });
-      return;
+
+      if (!supplier) {
+        res.status(404).json({
+          success: false,
+          error: 'Supplier not found'
+        });
+        return;
+      }
     }
 
     const announcement = await prisma.announcement.create({
@@ -343,7 +345,8 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
         medicineId,
         quantity,
         expiryDate: new Date(expiryDate),
-        supplierUserId,
+        supplierUserId: supplierUserId || null,
+        manualSupplierName: manualSupplierName || null,
         pharmacyUserId: req.user.id,
         visibleToSupplier
       },

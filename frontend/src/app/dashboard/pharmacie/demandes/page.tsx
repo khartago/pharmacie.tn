@@ -13,6 +13,7 @@ import {
   Input,
   Textarea,
   Select,
+  MultiSelect,
   ModernPageHeader,
   ModernTabNav,
   ActionMenu,
@@ -41,7 +42,9 @@ import {
   MapPin,
   Phone,
   Mail,
-  User
+  User,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { useApi, usePagination, useFilters, useDebounce, useToast } from '@/lib/hooks';
 import { formatDate, formatRelativeTime } from '@/lib/utils/formatters';
@@ -92,25 +95,82 @@ function PharmacieDemandesContent() {
   const { filters, setFilter, clearAllFilters, hasActiveFilters } = useFilters();
   const debouncedSearch = useDebounce(searchTerm, 300);
   const { success, error } = useToast();
+  const [tabCounts, setTabCounts] = useState<{ disponibles: number; mesDemandes: number; jaiAccepte: number; archives: number }>({ disponibles: 0, mesDemandes: 0, jaiAccepte: 0, archives: 0 });
 
   // Tab configuration
   const tabs = [
-    { key: 'disponibles', label: 'DEMANDES DISPONIBLES', count: requests.length },
-    { key: 'mes-demandes', label: 'MES DEMANDES', count: requests.length },
-    { key: 'jai-accepte', label: 'J\'AI ACCEPTÉ', count: responses.length },
-    { key: 'archives', label: 'ARCHIVES', count: 0 }
+    { key: 'disponibles', label: 'DEMANDES DISPONIBLES', count: tabCounts.disponibles },
+    { key: 'mes-demandes', label: 'MES DEMANDES', count: tabCounts.mesDemandes },
+    { key: 'jai-accepte', label: 'J\'AI ACCEPTÉ', count: tabCounts.jaiAccepte },
+    { key: 'archives', label: 'ARCHIVES', count: tabCounts.archives }
   ];
 
   // Load data based on active tab
   useEffect(() => {
     loadData();
     loadCitiesAndRegions();
+    refreshTabCounts();
   }, [activeTab, debouncedSearch, filters]);
 
   // Reload data when page changes
   useEffect(() => {
     loadData();
+    refreshTabCounts();
   }, [pagination.page]);
+
+  const refreshTabCounts = async () => {
+    try {
+      const baseParams: any = { search: debouncedSearch, ...filters, limit: 200, page: 1 };
+      const [dResp, mResp, aResp, jResp] = await Promise.all([
+        RequestsAPI.getAll({ ...baseParams, excludeMine: true, status: 'OPEN' }),
+        RequestsAPI.getAll({ ...baseParams, userOnly: true, statusIn: 'OPEN,ACCEPTED' }),
+        RequestsAPI.getAll({ ...baseParams, archives: 'true' }),
+        RequestsAPI.getMyResponses({ ...baseParams, status: 'ACCEPTED' })
+      ]);
+
+      const extractList = (resp: any): any[] => {
+        const payload: any = resp?.data;
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload?.requests)) return payload.requests;
+        if (Array.isArray(payload?.data)) return payload.data;
+        return [];
+      };
+
+      const disponiblesList = extractList(dResp).filter((req: any) => String(req.status).toUpperCase() === 'OPEN' && !isExpired(req.createdAt, req.scope));
+      const mesList = extractList(mResp).filter((req: any) => {
+        const statusUpper = String(req.status).toUpperCase();
+        // Explicitly exclude CLOSED and EXPIRED (they belong in archives)
+        if (statusUpper === 'CLOSED' || statusUpper === 'EXPIRED') {
+          return false;
+        }
+        const hasAccepted = Array.isArray(req.responses) && req.responses.some((r: any) => String(r.status).toUpperCase() === 'ACCEPTED');
+        const notExpired = !isExpired(req.createdAt, req.scope);
+        // Include OPEN requests that are not expired OR have accepted responses
+        return statusUpper === 'OPEN' && (notExpired || hasAccepted);
+      });
+      const archivesList = extractList(aResp);
+      const jaiList = (() => {
+        const payload: any = jResp?.data;
+        const responses = Array.isArray(payload?.responses) ? payload.responses :
+                          Array.isArray(payload?.data) ? payload.data : [];
+        // Exclude responses for CLOSED or EXPIRED requests (they belong in archives)
+        return responses.filter((r: any) => {
+          const responseStatus = String(r.status).toUpperCase();
+          const requestStatus = String(r.request?.status || '').toUpperCase();
+          return responseStatus === 'ACCEPTED' && requestStatus !== 'CLOSED' && requestStatus !== 'EXPIRED';
+        });
+      })();
+
+      setTabCounts({
+        disponibles: disponiblesList.length,
+        mesDemandes: mesList.length,
+        jaiAccepte: jaiList.length,
+        archives: archivesList.length
+      });
+    } catch (e) {
+      // ignore
+    }
+  };
 
   // Load cities and regions from backend
   const loadCitiesAndRegions = async () => {
@@ -159,10 +219,10 @@ function PharmacieDemandesContent() {
           response = await RequestsAPI.getMyResponses(params);
           break;
         case 'archives':
+          // Server builds archives set (mine closed/expired + accepted by me closed/expired)
           response = await RequestsAPI.getAll({ 
             ...params, 
-            userOnly: true,
-            status: 'EXPIRED'
+            archives: 'true'
           });
           break;
         default:
@@ -170,24 +230,55 @@ function PharmacieDemandesContent() {
       }
       
       if (response.success && response.data) {
+        // Normalize payload shapes from backend: {data: T[]} | {data: {data: T[]}} | {data: {requests: T[]}} | {data: {responses: T[]}}
+        const payload: any = response.data as any;
         if (activeTab === 'jai-accepte') {
-          const responsesData = Array.isArray(response.data) 
-            ? response.data 
-            : Array.isArray(response.data.data) 
-              ? response.data.data 
-              : [];
-          
-          setResponses(responsesData);
-          setTotal(response.data.pagination?.total || responsesData.length);
+          const responsesData = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload.data)
+              ? payload.data
+              : Array.isArray(payload.responses)
+                ? payload.responses
+                : [];
+          // Keep only accepted responses and still relevant (waiting to complete)
+          // Exclude responses for CLOSED or EXPIRED requests (they belong in archives)
+          const filtered = responsesData.filter((r: any) => {
+            const responseStatus = String(r.status).toUpperCase();
+            const requestStatus = String(r.request?.status || '').toUpperCase();
+            // Only include ACCEPTED responses for requests that are not CLOSED or EXPIRED
+            return responseStatus === 'ACCEPTED' && requestStatus !== 'CLOSED' && requestStatus !== 'EXPIRED';
+          });
+          setResponses(filtered);
+          setTotal(payload.pagination?.total || filtered.length);
         } else {
-        const requestsData = Array.isArray(response.data) 
-          ? response.data 
-          : Array.isArray(response.data.data) 
-            ? response.data.data 
-            : [];
-        
-        setRequests(requestsData);
-        setTotal(response.data.pagination?.total || requestsData.length);
+          const requestsData = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload.data)
+              ? payload.data
+              : Array.isArray(payload.requests)
+                ? payload.requests
+                : [];
+          // Apply tab-specific client filters
+          let filtered = requestsData as any[];
+          if (activeTab === 'disponibles') {
+            filtered = filtered.filter((req: any) => String(req.status).toUpperCase() === 'OPEN' && !isExpired(req.createdAt, req.scope));
+          } else if (activeTab === 'mes-demandes') {
+            filtered = filtered.filter((req: any) => {
+              const statusUpper = String(req.status).toUpperCase();
+              // Explicitly exclude CLOSED and EXPIRED (they belong in archives)
+              if (statusUpper === 'CLOSED' || statusUpper === 'EXPIRED') {
+                return false;
+              }
+              const hasAccepted = Array.isArray(req.responses) && req.responses.some((r: any) => String(r.status).toUpperCase() === 'ACCEPTED');
+              const notExpired = !isExpired(req.createdAt, req.scope);
+              // Include OPEN requests that are not expired OR have accepted responses
+              return statusUpper === 'OPEN' && (notExpired || hasAccepted);
+            });
+          } else if (activeTab === 'archives') {
+            // Backend already filtered; keep as-is
+          }
+          setRequests(filtered);
+          setTotal(payload.pagination?.total || filtered.length);
         }
       } else {
         console.log('API Response failed or no data:', response);
@@ -246,6 +337,20 @@ function PharmacieDemandesContent() {
     setIsModalOpen(true);
   };
 
+  const handleRenew = (request: any) => {
+    setEditingRequest(null); // Create new, don't edit
+    setFormData({
+      medicineId: request.medicine?.id,
+      medicineName: request.medicine?.brandName,
+      quantity: request.quantity,
+      scope: request.scope,
+      cities: request.cities || [],
+      regions: request.regions || []
+    });
+    setErrors({});
+    setIsModalOpen(true);
+  };
+
   const handleDelete = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
@@ -262,7 +367,8 @@ function PharmacieDemandesContent() {
           error('Erreur lors de la suppression');
         }
         setConfirmDialog(null);
-      }
+      },
+      variant: 'destructive'
     });
   };
 
@@ -298,6 +404,7 @@ function PharmacieDemandesContent() {
         success(editingRequest ? 'Demande modifiée' : 'Demande créée');                                                             
         setIsModalOpen(false);
         loadData();
+        refreshTabCounts();
       } else {
         error(response?.error || 'Erreur lors de l\'opération');
       }
@@ -309,11 +416,12 @@ function PharmacieDemandesContent() {
   const handleRespond = (request: any) => {
     setSelectedRequest(request);
     setConfirmDialog({
+      isOpen: true,
       title: "Confirmer votre disponibilité",
-      message: `Êtes-vous sûr d'avoir le médicament "${request.medicine.brandName}" en stock ?`,
-      subMessage: "Vos coordonnées seront partagées immédiatement avec le demandeur.",
+      description: `Êtes-vous sûr d'avoir le médicament "${request.medicine.brandName}" en stock ? Vos coordonnées seront partagées immédiatement avec le demandeur.`,
       onConfirm: () => confirmRespond(request.id),
-      onCancel: () => setConfirmDialog(null)
+      onCancel: () => setConfirmDialog(null),
+      variant: 'success'
     });
   };
 
@@ -328,23 +436,34 @@ function PharmacieDemandesContent() {
     }
   };
 
-  const handleMarkAsCompleted = async (requestId: string) => {
+  const handleMarkAsCompleted = async (requestId: string | number | undefined) => {
+    if (!requestId) {
+      error('ID de demande manquant');
+      return;
+    }
     setConfirmDialog({
+      isOpen: true,
       title: "Marquer comme terminé",
-      message: "Êtes-vous sûr de vouloir marquer cette demande comme terminée ?",
-      subMessage: "La demande sera archivée et ne sera plus visible.",
-      onConfirm: () => confirmMarkAsCompleted(requestId),
-      onCancel: () => setConfirmDialog(null)
+      description: "Êtes-vous sûr de vouloir marquer cette demande comme terminée ? La demande sera archivée et ne sera plus visible.",
+      onConfirm: () => confirmMarkAsCompleted(String(requestId)),
+      onCancel: () => setConfirmDialog(null),
+      variant: 'success'
     });
   };
 
   const confirmMarkAsCompleted = async (requestId: string) => {
     try {
-      await RequestsAPI.markAsCompleted(requestId);
-      success('Demande marquée comme terminée !');
-      setConfirmDialog(null);
-      loadData();
+      const response = await RequestsAPI.markAsCompleted(requestId);
+      setConfirmDialog(null); // Fermer le dialog avant de traiter la réponse
+      if (response?.success) {
+        success('Demande marquée comme terminée !');
+        loadData();
+        refreshTabCounts();
+      } else {
+        error(response?.error || 'Erreur lors de la finalisation');
+      }
     } catch (err) {
+      setConfirmDialog(null);
       error('Erreur lors de la finalisation');
     }
   };
@@ -400,7 +519,8 @@ function PharmacieDemandesContent() {
           error('Erreur lors du refus');
         }
         setConfirmDialog(null);
-      }
+      },
+      variant: 'destructive'
     });
   };
 
@@ -508,9 +628,31 @@ function PharmacieDemandesContent() {
       const responseCount = item.responses?.length || 0;
       const pendingCount = item.responses?.filter((r: any) => r.status === 'PENDING')?.length || 0;
       const isExpiredRequest = isExpired(item.createdAt, item.scope);
+      const responsesArray = Array.isArray(item.responses) ? item.responses : [];
+      const acceptedResponses = responsesArray.filter((r: any) => String(r.status).toUpperCase() === 'ACCEPTED');
+      const awaiting = responsesArray.length === 0;
 
-    return (
-        <div className="group relative overflow-hidden h-full flex flex-col">
+      return (
+        <div
+          className="group relative overflow-hidden h-full min-h-[380px] flex flex-col rounded-xl"
+          onClick={() => {
+            if (acceptedResponses.length > 0) {
+              const resp = acceptedResponses[0];
+              setSelectedResponse({ pharmacy: resp.pharmacyUser });
+              setShowContactModal(true);
+            }
+          }}
+          role={acceptedResponses.length > 0 ? 'button' : undefined}
+          tabIndex={acceptedResponses.length > 0 ? 0 : -1}
+          onKeyDown={(e) => {
+            if (acceptedResponses.length > 0 && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              const resp = acceptedResponses[0];
+              setSelectedResponse({ pharmacy: resp.pharmacyUser });
+              setShowContactModal(true);
+            }
+          }}
+        >
         {/* Status Badge */}
         <div className="absolute top-4 right-4 z-10">
           <div className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -546,42 +688,54 @@ function PharmacieDemandesContent() {
             </div>
           </div>
 
-            {/* Acceptants List */}
-            {responseCount > 0 && (
-              <div className="mb-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                <div className="text-center mb-3">
-                  <div className="text-2xl font-bold text-green-600 mb-1">{responseCount}</div>
-                  <div className="text-base font-semibold text-gray-800">Pharmacies ayant accepté</div>
+          {/* Acceptants / Awaiting */}
+          {acceptedResponses.length > 0 ? (
+            <div className="mb-4 p-4 rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+              <div className="text-center mb-3">
+                <div className="text-base font-semibold text-gray-800">Pharmacies ayant accepté</div>
               </div>
-                <div className="space-y-2">
-                  {item.responses?.slice(0, 3).map((response: any, index: number) => (
-                    <div key={index} className="bg-white p-3 rounded-lg border border-green-200">
-                      <div className="text-sm font-semibold text-gray-800">{response.pharmacyUser?.name}</div>
-                      <div className="text-xs text-gray-600">{response.pharmacyUser?.city?.name}</div>
-                      <div className="text-xs text-green-600 font-medium">Contact disponible</div>
-              </div>
-                  ))}
-                  {responseCount > 3 && (
-                    <div className="text-xs text-gray-500 text-center">
-                      +{responseCount - 3} autres pharmacies
-            </div>
-                  )}
+              <div className="space-y-2">
+                {acceptedResponses.slice(0, 3).map((response: any, index: number) => (
+                  <div key={index} className="bg-white p-3 rounded-lg border border-green-200">
+                    <div className="text-sm font-semibold text-gray-800">{response.pharmacyUser?.name}</div>
+                    <div className="text-xs text-gray-600">{response.pharmacyUser?.city?.name}</div>
+                    <div className="text-xs text-green-600 font-medium">Contact disponible</div>
+                  </div>
+                ))}
+                {acceptedResponses.length > 3 && (
+                  <div className="text-xs text-gray-500 text-center">+{acceptedResponses.length - 3} autres pharmacies</div>
+                )}
               </div>
             </div>
-          )}
+          ) : awaiting ? (
+            <div className="mb-4 p-4 rounded-xl border bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
+              <div className="text-center mb-3">
+                <div className="text-base font-semibold text-gray-800">En attente</div>
+                <div className="text-xs text-gray-600">En attente qu'une pharmacie confirme la disponibilité de ce médicament</div>
+              </div>
+              <div className="space-y-2">
+                {/* Empty placeholder to keep vertical rhythm consistent */}
+              </div>
+            </div>
+          ) : null}
 
-          {/* Action Buttons */}
-            <div className="space-y-3">
+          {/* Action Buttons (stick to bottom) */}
+            <div className="space-y-3 mt-auto">
               {item.status === 'OPEN' && (
-            <button
+                <button
                   onClick={() => handleMarkAsCompleted(item.id)}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={!((Array.isArray(item.responses) ? item.responses : []).some((r: any) => String(r.status).toUpperCase() === 'ACCEPTED'))}
+                  className={`w-full font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg transform hover:scale-[1.02] active:scale-[0.98] ${
+                    (Array.isArray(item.responses) ? item.responses : []).some((r: any) => String(r.status).toUpperCase() === 'ACCEPTED')
+                      ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-xl'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <Check className="w-5 h-5" />
                     <span>MARQUER COMME TERMINÉ</span>
-              </div>
-            </button>
+                  </div>
+                </button>
               )}
               <div className="grid grid-cols-2 gap-3">
             <button
@@ -623,7 +777,7 @@ function PharmacieDemandesContent() {
 
     if (activeTab === 'jai-accepte') {
       return (
-        <div className="group relative overflow-hidden h-full flex flex-col">
+        <div className="group relative overflow-hidden h-full min-h-[380px] flex flex-col rounded-xl">
           {/* Status Badge */}
           <div className="absolute top-4 right-4 z-10">
             <div className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -654,8 +808,8 @@ function PharmacieDemandesContent() {
                 <div className="text-xs text-blue-600 font-medium">Quantité demandée</div>
               </div>
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center">
-                <div className="text-lg font-bold text-gray-700">{formatDate(item.createdAt)}</div>
-                <div className="text-xs text-gray-600 font-medium">Date de proposition</div>
+                <div className="text-lg font-bold text-gray-700">{formatDate(item.request?.createdAt || item.createdAt)}</div>
+                <div className="text-xs text-gray-600 font-medium">Date de création</div>
               </div>
             </div>
 
@@ -685,16 +839,30 @@ function PharmacieDemandesContent() {
               </div>
             </div>
 
-            {/* Action Button */}
-            <button
-              onClick={() => handleMarkAsCompleted(item.request?.id)}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <Check className="w-5 h-5" />
-                <span>MARQUER COMME TERMINÉ</span>
-              </div>
-            </button>
+            {/* Action Buttons (stick to bottom) */}
+            <div className="mt-auto">
+              <button
+                onClick={() => {
+                  const reqId = item.request?.id || item.requestId;
+                  if (reqId) {
+                    handleMarkAsCompleted(reqId);
+                  } else {
+                    error('ID de demande introuvable');
+                  }
+                }}
+                disabled={String(item.status).toUpperCase() !== 'ACCEPTED' || !(item.request?.id || item.requestId)}
+                className={`w-full font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg transform hover:scale-[1.02] active:scale-[0.98] ${
+                  String(item.status).toUpperCase() === 'ACCEPTED' && (item.request?.id || item.requestId)
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-xl'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <Check className="w-5 h-5" />
+                  <span>MARQUER COMME TERMINÉ</span>
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* Footer */}
@@ -709,7 +877,7 @@ function PharmacieDemandesContent() {
 
     if (activeTab === 'archives') {
       return (
-        <div className="group relative overflow-hidden h-full flex flex-col">
+        <div className="group relative overflow-hidden h-full min-h-[380px] flex flex-col rounded-xl">
           {/* Status Badge */}
           <div className="absolute top-4 right-4 z-10">
             <span className="bg-gray-100 text-gray-800 text-xs font-bold px-2 py-1 rounded-full border border-gray-200">
@@ -737,21 +905,59 @@ function PharmacieDemandesContent() {
               </div>
             </div>
 
-            {/* Status Info */}
-            <div className="mb-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
-              <div className="text-center">
-                <div className="text-sm font-semibold text-gray-800 mb-2">Statut final</div>
-                {item.status === 'EXPIRED' && (
-                  <div className="text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
-                    Expirée
+            {/* Status Info - Enhanced */}
+            <div className="mb-4">
+              {item.status === 'EXPIRED' && (
+                <div className="p-5 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200">
+                  <div className="flex items-center justify-center space-x-3 mb-2">
+                    <div className="p-2 bg-orange-100 rounded-full">
+                      <Clock className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold text-orange-900">Demande expirée</div>
+                      <div className="text-xs text-orange-700 mt-1">Cette demande a dépassé sa durée de validité</div>
+                    </div>
                   </div>
-                )}
-                {item.status === 'CLOSED' && (
-                  <div className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-                    Fermée
+                  {item.updatedAt && (
+                    <div className="text-xs text-orange-600 text-center mt-2 pt-2 border-t border-orange-200">
+                      Expirée le {formatDate(item.updatedAt)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {item.status === 'CLOSED' && (
+                <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                  <div className="flex items-center justify-center space-x-3 mb-2">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-bold text-blue-900">Demande terminée</div>
+                      <div className="text-xs text-blue-700 mt-1">Cette demande a été marquée comme complétée</div>
+                    </div>
                   </div>
-                )}
-              </div>
+                  {item.updatedAt && (
+                    <div className="text-xs text-blue-600 text-center mt-2 pt-2 border-t border-blue-200">
+                      Fermée le {formatDate(item.updatedAt)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons (stick to bottom) */}
+            <div className="mt-auto">
+              {item.status === 'EXPIRED' && (
+                <button
+                  onClick={() => handleRenew(item)}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-xl text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Plus className="w-5 h-5" />
+                    <span>RENOUVELER LA DEMANDE</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
 
@@ -895,7 +1101,7 @@ function PharmacieDemandesContent() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingRequest ? 'Modifier la demande' : 'Nouvelle demande'}
-        size="lg"
+        size="xl"
       >
         <div className="space-y-4">
           <FormField
@@ -944,18 +1150,35 @@ function PharmacieDemandesContent() {
           </FormField>
 
           {formData.scope === 'CITY' && (
-            <FormField
-              label="Villes"
-              required
-              error={errors.cities}
-            >
-              <Select
-                placeholder="Sélectionner les villes"
-                value={formData.cities || []}
-                onChange={(values) => setFormData({ ...formData, cities: values })}
-                options={cities.map(city => ({ value: city.id, label: `${city.name} (${city.region})` }))}
-              />
-            </FormField>
+            <>
+              <FormField
+                label="Régions"
+                required
+                error={errors.regions}
+              >
+                <MultiSelect
+                  placeholder="Sélectionner les régions"
+                  value={formData.regions || []}
+                  onChange={(values: string[]) => setFormData({ ...formData, regions: values, cities: [] })}
+                  options={regions as any}
+                />
+              </FormField>
+
+              <FormField
+                label="Villes"
+                required
+                error={errors.cities}
+              >
+                <MultiSelect
+                  placeholder={formData.regions?.length ? 'Sélectionner les villes' : 'Sélectionner d\'abord une ou plusieurs régions'}
+                  value={formData.cities || []}
+                  onChange={(values: string[]) => setFormData({ ...formData, cities: values })}
+                  options={(formData.regions?.length ? cities.filter((c: any) => (formData.regions as string[]).includes(c.region)) : [])
+                    .map((city: any) => ({ value: city.id, label: `${city.name} (${city.region})` }))}
+                  disabled={!formData.regions || formData.regions.length === 0}
+                />
+              </FormField>
+            </>
           )}
 
           {formData.scope === 'REGION' && (
@@ -964,11 +1187,11 @@ function PharmacieDemandesContent() {
               required
               error={errors.regions}
             >
-              <Select
+              <MultiSelect
                 placeholder="Sélectionner les régions"
                 value={formData.regions || []}
-                onChange={(values) => setFormData({ ...formData, regions: values })}
-                options={regions}
+                onChange={(values: string[]) => setFormData({ ...formData, regions: values })}
+                options={regions as any}
               />
             </FormField>
           )}
@@ -1141,12 +1364,16 @@ function PharmacieDemandesContent() {
       {/* Confirm Dialog */}
       {confirmDialog && (
         <ConfirmDialog
-          isOpen={confirmDialog.isOpen}
+          isOpen={confirmDialog.isOpen ?? true}
           onClose={() => setConfirmDialog(null)}
-          onConfirm={confirmDialog.onConfirm}
+          onConfirm={() => {
+            if (confirmDialog.onConfirm) {
+              confirmDialog.onConfirm();
+            }
+          }}
           title={confirmDialog.title}
-          description={confirmDialog.description}
-          variant="destructive"
+          description={confirmDialog.description || confirmDialog.message || (confirmDialog.subMessage ? `${confirmDialog.message}\n${confirmDialog.subMessage}` : '')}
+          variant={confirmDialog.variant || 'default'}
         />
       )}
     </div>
